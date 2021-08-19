@@ -10,6 +10,7 @@ npx hardhat repl Print \"Hello World\"
 
 ```
 npm install
+npm run plugin
 npx hardhat compile
 npx hardhat scen --file spec/sim/0008-sweep-token/hypothetical_migration.scen
 ```

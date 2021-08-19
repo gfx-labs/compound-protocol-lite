@@ -4,14 +4,9 @@ Experimental [Hardhat](https://hardhat.org/) repo.
 
 ## how to use
 
-npm run build
-npx hardhat repl Print \"Hello World\"
-
-
 ```
 npm install
-npm run setup
-npx hardhat compile
+npm run build
 npx hardhat scen --file spec/sim/0008-sweep-token/hypothetical_migration.scen
 ```
 

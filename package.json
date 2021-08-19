@@ -4,9 +4,8 @@
   "description": "Barebones Compound Protocol",
   "main": "index.js",
   "scripts": {
-    "setup": "cd plugin && npm i && npx tsc",
-    "build":"cd plugin && npx tsc",
-    "console": "cd plugin && npx tsc && cd .. && npx hardhat console"
+    "build": "npx tsc && npx hardhat compile",
+    "console": "npx tsc && npx hardhat console"
   },
   "keywords": [],
   "author": "Jared Flatow <jared@compound.finance>",
@@ -22,6 +21,7 @@
     "node-fetch": "^2.6.1"
   },
   "dependencies": {
-    "bignumber.js": "^9.0.1"
+    "bignumber.js": "^9.0.1",
+    "truffle-flattener": "^1.5.0"
   }
 }

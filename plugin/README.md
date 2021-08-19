@@ -2,14 +2,6 @@
 
 Experimental [Hardhat](https://hardhat.org/) plugin.
 
-## how to use
-
-first build it (npx tsc)
-
-load the compiled output as a library in hardhat.config.js
-
-e.g. require("plugin/dist/index")
-
 ## what is it
 
 

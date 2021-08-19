@@ -2,6 +2,7 @@
 
 Experimental [Hardhat](https://hardhat.org/) repo.
 
+
 ## how to use
 
 ```
@@ -11,6 +12,10 @@ npx hardhat scen --file spec/sim/0008-sweep-token/hypothetical_migration.scen
 ```
 
 very incomplete
+
+
+make sure that your node version is high enough for hardhat
+im using 16.7.0
 
 
 ## Scripts

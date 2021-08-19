@@ -18,7 +18,8 @@
     "ethereum-waffle": "^3.3.0",
     "ethers": "^5.1.0",
     "hardhat": "^2.1.2",
-    "node-fetch": "^2.6.1"
+    "node-fetch": "^2.6.1",
+    "ts-node": "^10.2.1"
   },
   "dependencies": {
     "bignumber.js": "^9.0.1",

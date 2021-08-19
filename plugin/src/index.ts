@@ -33,8 +33,6 @@ extendConfig(
 );
 
 extendEnvironment(async (hre) => {
-  // create the world
-  //
   hre.init_world = async () => {
     hre.world = await setup_repl(hre);
     hre.repl = new ReplEvaluator(hre);

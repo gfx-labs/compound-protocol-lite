@@ -18,6 +18,9 @@ import { parse } from "./Parser";
 import * as fs from "fs";
 import * as path from "path";
 import { HardhatRuntimeEnvironment } from "hardhat/types";
+import { createInterface } from "./HistoricReadline";
+import { complete } from "./Completer";
+import { getNetworkPath } from "./File";
 
 const basePath = process.env.proj_root || process.cwd();
 const baseScenarioPath = path.join(basePath, "spec", "scenario");
@@ -25,7 +28,7 @@ const baseNetworksPath = path.join(basePath, "networks");
 
 const TOTAL_GAS = 8000000;
 
-async function loop(world, command, macros): Promise<any> {
+async function execute(world, command, macros): Promise<any> {
   try {
     if (command) {
       if (command[0] == "#") {
@@ -121,5 +124,33 @@ export const setup_repl = async (
 };
 
 export const evaluate_repl = async (world: World, command: string, macros) => {
-  return loop(world, command, macros);
+  return execute(world, command, macros);
 };
+
+function questionPromise(rl): Promise<string> {
+  return new Promise((resolve, reject) => {
+    rl.question(" > ", (command) => {
+      resolve(command);
+    });
+  });
+}
+
+export const create_repl = async (world: World, macros: any) => {
+  let rl = await createInterface({
+    input: process.stdin,
+    output: process.stdout,
+    completer: (line) => complete(world, macros, line),
+    path: getNetworkPath(basePath, world.network, "-history", null),
+  });
+  return await loop(world, rl, macros);
+};
+async function loop(world, rl, macros): Promise<any> {
+  let command = await questionPromise(rl);
+  try {
+    let newWorld = await runCommand(world, command, macros);
+    return await loop(newWorld, rl, macros);
+  } catch (err) {
+    world.printer.printError(err);
+    return await loop(world, rl, macros);
+  }
+}

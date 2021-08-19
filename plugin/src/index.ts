@@ -11,7 +11,7 @@ import path from "path";
 import "@nomiclabs/hardhat-ethers";
 
 import "./type-extensions";
-import { evaluate_repl, setup_repl } from "./scenario/Repl";
+import { create_repl, evaluate_repl, setup_repl } from "./scenario/Repl";
 import { ReplEvaluator } from "./evaluator";
 
 extendConfig(
@@ -44,12 +44,10 @@ task("init_world", "initialize the world").setAction(async (args, hre) => {
   return;
 });
 
-task("repl", "send message to repl/world")
-  .addVariadicPositionalParam("cmd", "string to evaluate", ["Print", "test"])
-  .setAction(async (args, hre) => {
-    await hre.init_world();
-    await hre.repl.line(args.cmd.join(" "));
-  });
+task("repl", "create a repl").setAction(async (args, hre) => {
+  await hre.init_world();
+  await create_repl(hre.world, hre.macros);
+});
 
 task("scen", "run scenario")
   .addParam("file", "file to evaluate to evaluate")

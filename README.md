@@ -8,7 +8,15 @@ Experimental [Hardhat](https://hardhat.org/) repo.
 ```
 npm install
 npm run build
+
 npx hardhat scen --file spec/sim/0008-sweep-token/hypothetical_migration.scen
+
+or
+
+npx hardhat repl
+
+
+
 ```
 
 very incomplete

@@ -8,33 +8,11 @@ npm run build
 npx hardhat repl Print \"Hello World\"
 
 
-
-
-
-
-
-npm run console
-
-then do
-
-hre.repl.line(`Command`)
-
-or
-
-
-hre.repl.lines(`
-
-  Command
-
-  Command2
-
-  Command3
-
-  Etc
-
-  Etc
-
-  `)
+```
+npm install
+npx hardhat compile
+npx hardhat scen --file spec/sim/0008-sweep-token/hypothetical_migration.scen
+```
 
 very incomplete
 

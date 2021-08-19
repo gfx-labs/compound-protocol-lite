@@ -1,6 +1,10 @@
 import { extendConfig, extendEnvironment, task, types } from "hardhat/config";
 import { lazyObject } from "hardhat/plugins";
-import { HardhatConfig, HardhatUserConfig } from "hardhat/types";
+import {
+  HardhatConfig,
+  HardhatRuntimeEnvironment,
+  HardhatUserConfig,
+} from "hardhat/types";
 import { World } from "./scenario/World";
 import path from "path";
 // depend on hardhat-ethers
@@ -30,24 +34,29 @@ extendConfig(
 
 extendEnvironment(async (hre) => {
   // create the world
-  // hre.world = await setup_repl(hre);
-  //hre.repl = new ReplEvaluator(hre);
-  const accounts = await hre.ethers.provider.listAccounts();
+  //
+  hre.init_world = async () => {
+    hre.world = await setup_repl(hre);
+    hre.repl = new ReplEvaluator(hre);
+  };
+});
+
+task("init_world", "initialize the world").setAction(async (args, hre) => {
+  await hre.init_world();
+  return;
 });
 
 task("repl", "send message to repl/world")
   .addVariadicPositionalParam("cmd", "string to evaluate", ["Print", "test"])
   .setAction(async (args, hre) => {
-    hre.world = await setup_repl(hre);
-    hre.repl = new ReplEvaluator(hre);
+    await hre.init_world();
     await hre.repl.line(args.cmd.join(" "));
   });
 
 task("scen", "run scenario")
   .addParam("file", "file to evaluate to evaluate")
   .setAction(async (args, hre) => {
-    hre.world = await setup_repl(hre);
-    hre.repl = new ReplEvaluator(hre);
-    console.log(args.file);
+    console.log("running file:", args.file);
+    await hre.init_world();
     await hre.repl.file(args.file);
   });

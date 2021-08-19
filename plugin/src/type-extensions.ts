@@ -24,5 +24,6 @@ declare module "hardhat/types/runtime" {
     world: World;
     macros: Macros;
     repl: ReplEvaluator;
+    init_world: () => Promise<any>;
   }
 }

@@ -6,6 +6,7 @@ artifacts
 yarn.lock
 
 dist
+*dist
 *.debug
 typechain
 *-history

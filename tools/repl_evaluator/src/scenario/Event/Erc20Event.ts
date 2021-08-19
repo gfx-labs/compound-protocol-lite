@@ -1,8 +1,9 @@
 import { Event } from "../Event";
 import { addAction, World } from "../World";
-import { Erc20 } from "../Contract/Erc20";
+import { IERC20 as Erc20 } from "../../../../../typechain/IERC20";
 import { invoke } from "../Invokation";
 import { buildErc20 } from "../Builder/Erc20Builder";
+import { BigNumber } from "ethers";
 import {
   getAddressV,
   getBoolV,
@@ -23,19 +24,18 @@ async function genToken(
   from: string,
   params: Event
 ): Promise<World> {
-  let { world: newWorld, erc20, tokenData } = await buildErc20(
-    world,
-    from,
-    params
-  );
+  let {
+    world: newWorld,
+    erc20,
+    tokenData,
+  } = await buildErc20(world, from, params);
   world = newWorld;
 
   world = addAction(
     world,
-    `Added ERC-20 token ${tokenData.symbol} (${tokenData.description}) at address ${erc20._address}`,
+    `Added ERC-20 token ${tokenData.symbol} (${tokenData.description}) at address ${erc20.address}`,
     tokenData.invokation
   );
-
   return world;
 }
 
@@ -51,7 +51,7 @@ async function verifyErc20(
       `Politely declining to verify on local network: ${world.network}.`
     );
   } else {
-    await verify(world, apiKey, name, contract, erc20._address);
+    await verify(world, apiKey, name, contract, erc20.address);
   }
 
   return world;
@@ -68,14 +68,17 @@ async function approve(
     world,
     from,
     erc20,
-    await erc20.populateTransaction.approve(address, amount.encode()),
+    await erc20.populateTransaction.approve(
+      address,
+      BigNumber.from(amount.encode())
+    ),
     "approve",
     CTokenErrorReporter
   );
 
   world = addAction(
     world,
-    `Approved ${erc20.name} ERC-20 token for ${from} of ${amount.show()}`,
+    `Approved ${erc20.address} ERC-20 token for ${from} of ${amount.show()}`,
     invokation
   );
 
@@ -93,7 +96,10 @@ async function faucet(
     world,
     from,
     erc20,
-    await erc20.populateTransaction.allocateTo(address, amount.encode()),
+    await erc20.populateTransaction.allocateTo(
+      address,
+      BigNumber.from(amount.encode())
+    ),
     "allocateTo",
     CTokenErrorReporter
   );
@@ -118,7 +124,10 @@ async function transfer(
     world,
     from,
     erc20,
-    await erc20.populateTransaction.transfer(address, amount.encode()),
+    await erc20.populateTransaction.transfer(
+      address,
+      BigNumber.from(amount.encode())
+    ),
     "transfer",
     CTokenErrorReporter
   );
@@ -147,7 +156,7 @@ async function transferFrom(
     await erc20.populateTransaction.transferFrom(
       owner,
       spender,
-      amount.encode()
+      BigNumber.from(amount.encode())
     ),
     "transferFrom",
     CTokenErrorReporter
@@ -202,7 +211,6 @@ async function setPaused(
 
   return world;
 }
-
 async function setFee(
   world: World,
   from: string,
@@ -215,15 +223,15 @@ async function setFee(
     from,
     erc20,
     await erc20.populateTransaction.setParams(
-      basisPointFee.encode(),
-      maxFee.encode()
+      BigNumber.from(basisPointFee.encode()),
+      BigNumber.from(maxFee.encode())
     ),
     "setParams"
   );
 
   world = addAction(
     world,
-    `Set fee on ${erc20.name} to ${basisPointFee} with a max of ${maxFee}`,
+    `Set fee on ${erc20.name()} to ${basisPointFee} with a max of ${maxFee}`,
     invokation
   );
 
@@ -258,7 +266,7 @@ export function erc20Commands() {
 
         return await verifyErc20(
           world,
-          erc20,
+          erc20 as unknown as Erc20,
           name,
           data.get("contract")!,
           apiKey.val
@@ -373,24 +381,24 @@ export function erc20Commands() {
         setPaused(world, from, erc20, paused.val),
       { namePos: 1 }
     ),
-    new Command<{ erc20: Erc20; basisPointFee: NumberV; maxFee: NumberV }>(
-      `
-        #### SetFee
+    //  new Command<{ erc20: Erc20; basisPointFee: NumberV; maxFee: NumberV }>(
+    //    `
+    //      #### SetFee
 
-        * "Erc20 <Erc20> SetFee basisPointFee:<Number> maxFee:<Number>" - Sets the current fee and max fee on Tether. Current
-        * Current fee (basisPointFee) has a max of 20 basis points, while maxFee is capped at 50 Tether (a max absolute fee of 50 * 10 ^ decimals)
-          * E.g. "Erc20 USDT SetFee 10 10"
-      `,
-      "SetFee",
-      [
-        new Arg("erc20", getErc20V),
-        new Arg("basisPointFee", getNumberV),
-        new Arg("maxFee", getNumberV),
-      ],
-      (world, from, { erc20, basisPointFee, maxFee }) =>
-        setFee(world, from, erc20, basisPointFee, maxFee),
-      { namePos: 1 }
-    ),
+    //      * "Erc20 <Erc20> SetFee basisPointFee:<Number> maxFee:<Number>" - Sets the current fee and max fee on Tether. Current
+    //      * Current fee (basisPointFee) has a max of 20 basis points, while maxFee is capped at 50 Tether (a max absolute fee of 50 * 10 ^ decimals)
+    //        * E.g. "Erc20 USDT SetFee 10 10"
+    //    `,
+    //    "SetFee",
+    //    [
+    //      new Arg("erc20", getErc20V),
+    //      new Arg("basisPointFee", getNumberV),
+    //      new Arg("maxFee", getNumberV),
+    //    ],
+    //    (world, from, { erc20, basisPointFee, maxFee }) =>
+    //      setFee(world, from, erc20, basisPointFee, maxFee),
+    //    { namePos: 1 }
+    //  ),
   ];
 }
 

@@ -4,8 +4,8 @@
   "description": "Barebones Compound Protocol",
   "main": "index.js",
   "scripts": {
-    "build": "npx tsc && npx hardhat compile",
-    "console": "npx tsc && npx hardhat console"
+    "build": "npx hardhat compile && cd ./tools/repl_evaluator && npx tsc",
+    "repl": "node scripts/repl.js"
   },
   "keywords": [],
   "author": "elee <eddy@gfxlabs.io>",
@@ -25,6 +25,7 @@
     "typechain": "^5.1.2"
   },
   "dependencies": {
+    "@types/mocha": "^9.0.0",
     "bignumber.js": "^9.0.1",
     "truffle-flattener": "^1.5.0"
   }

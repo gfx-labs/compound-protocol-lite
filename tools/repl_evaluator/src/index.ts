@@ -32,7 +32,7 @@ extendConfig(
   }
 );
 
-extendEnvironment(async (hre) => {
+extendEnvironment((hre) => {
   hre.init_world = async () => {
     hre.world = await setup_repl(hre);
     hre.repl = new ReplEvaluator(hre);
@@ -44,15 +44,7 @@ task("init_world", "initialize the world").setAction(async (args, hre) => {
   return;
 });
 
-task("repl", "create a repl").setAction(async (args, hre) => {
-  await hre.init_world();
-  await create_repl(hre.world, hre.macros);
-});
-
-task("scen", "run scenario")
-  .addParam("file", "file to evaluate to evaluate")
-  .setAction(async (args, hre) => {
-    console.log("running file:", args.file);
-    await hre.init_world();
-    await hre.repl.file(args.file);
-  });
+export const init_world = async (hre) => {
+  hre.world = await setup_repl(hre);
+  hre.repl = new ReplEvaluator(hre);
+};

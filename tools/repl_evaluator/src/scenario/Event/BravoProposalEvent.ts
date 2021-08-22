@@ -54,8 +54,9 @@ export function proposalCommands(governor: GovernorBravo) {
         new Arg("reason", getEventV),
       ],
       async (world, from, { proposalIdent, support, reason }) => {
-        const governorBravo = new GovernorBravoDelegate__factory().attach(
-          governor.address
+        const governorBravo = GovernorBravoDelegate__factory.connect(
+          governor.address,
+          world.hre.ethers.provider
         );
         const proposalId = await getProposalId(
           world,
@@ -65,7 +66,7 @@ export function proposalCommands(governor: GovernorBravo) {
         const invokation = await invoke(
           world,
           from,
-          governor,
+          governorBravo,
           await governorBravo.populateTransaction.castVoteWithReason(
             proposalId,
             getSupport(support.val),
@@ -96,8 +97,9 @@ export function proposalCommands(governor: GovernorBravo) {
       "Vote",
       [new Arg("proposalIdent", getEventV), new Arg("support", getEventV)],
       async (world, from, { proposalIdent, support }) => {
-        const governorBravo = new GovernorBravoDelegate__factory().attach(
-          governor.address
+        const governorBravo = GovernorBravoDelegate__factory.connect(
+          governor.address,
+          world.hre.ethers.provider
         );
         const proposalId = await getProposalId(
           world,
@@ -107,7 +109,7 @@ export function proposalCommands(governor: GovernorBravo) {
         const invokation = await invoke(
           world,
           from,
-          governor,
+          governorBravo,
           await governorBravo.populateTransaction.castVote(
             proposalId,
             getSupport(support.val)
@@ -136,8 +138,9 @@ export function proposalCommands(governor: GovernorBravo) {
       "Queue",
       [new Arg("proposalIdent", getEventV)],
       async (world, from, { proposalIdent }) => {
-        const governorBravo = new GovernorBravoDelegate__factory().attach(
-          governor.address
+        const governorBravo = GovernorBravoDelegate__factory.connect(
+          governor.address,
+          world.hre.ethers.provider
         );
         const proposalId = await getProposalId(
           world,
@@ -147,7 +150,7 @@ export function proposalCommands(governor: GovernorBravo) {
         const invokation = await invoke(
           world,
           from,
-          governor,
+          governorBravo,
           await governorBravo.populateTransaction.queue(proposalId),
           "queue"
         );
@@ -156,7 +159,7 @@ export function proposalCommands(governor: GovernorBravo) {
           world,
           `Queue proposal ${await describeProposal(
             world,
-            governor,
+            governorBravo,
             proposalId
           )} from ${describeUser(world, from)}`,
           invokation
@@ -173,8 +176,9 @@ export function proposalCommands(governor: GovernorBravo) {
       "Execute",
       [new Arg("proposalIdent", getEventV)],
       async (world, from, { proposalIdent }) => {
-        const governorBravo = new GovernorBravoDelegate__factory().attach(
-          governor.address
+        const governorBravo = GovernorBravoDelegate__factory.connect(
+          governor.address,
+          world.hre.ethers.provider
         );
 
         const proposalId = await getProposalId(
@@ -185,7 +189,7 @@ export function proposalCommands(governor: GovernorBravo) {
         const invokation = await invoke(
           world,
           from,
-          governor,
+          governorBravo,
           await governorBravo.populateTransaction.execute(proposalId),
           "execute"
         );
@@ -194,7 +198,7 @@ export function proposalCommands(governor: GovernorBravo) {
           world,
           `Execute proposal ${await describeProposal(
             world,
-            governor,
+            governorBravo,
             proposalId
           )} from ${describeUser(world, from)}`,
           invokation
@@ -211,8 +215,9 @@ export function proposalCommands(governor: GovernorBravo) {
       "Cancel",
       [new Arg("proposalIdent", getEventV)],
       async (world, from, { proposalIdent }) => {
-        const governorBravo = new GovernorBravoDelegate__factory().attach(
-          governor.address
+        const governorBravo = GovernorBravoDelegate__factory.connect(
+          governor.address,
+          world.hre.ethers.provider
         );
         const proposalId = await getProposalId(
           world,
@@ -222,7 +227,7 @@ export function proposalCommands(governor: GovernorBravo) {
         const invokation = await invoke(
           world,
           from,
-          governor,
+          governorBravo,
           await governorBravo.populateTransaction.cancel(proposalId),
           "cancel"
         );
@@ -231,7 +236,7 @@ export function proposalCommands(governor: GovernorBravo) {
           world,
           `Cancel proposal ${await describeProposal(
             world,
-            governor,
+            governorBravo,
             proposalId
           )} from ${describeUser(world, from)}`,
           invokation

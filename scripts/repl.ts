@@ -12,7 +12,6 @@ import { HardhatRuntimeEnvironment } from "hardhat/types";
 
 const main = async (hre: HardhatRuntimeEnvironment) => {
   await init_world(hre);
-
   await create_repl(hre.world, hre.macros);
 };
 

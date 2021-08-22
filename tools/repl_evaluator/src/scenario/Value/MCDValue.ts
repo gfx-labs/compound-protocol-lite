@@ -1,11 +1,9 @@
 import { Event } from "../Event";
 import { World } from "../World";
-import { getContract } from "../Contract";
-import { PotLike as Pot } from "../../../../../typechain/PotLike";
-import { VatLike as Vat } from "../../../../../typechain/VatLike";
 import { getAddressV, getCoreValue, getStringV } from "../CoreValue";
 import { Arg, Fetcher, getFetcherValue } from "../Command";
 import { AddressV, NumberV, Value, StringV } from "../Value";
+import { PotLike__factory, VatLike__factory } from "../../../../../typechain";
 
 export function mcdFetchers() {
   return [
@@ -26,8 +24,10 @@ export function mcdFetchers() {
         new Arg("args", getCoreValue, { variadic: true, mapped: true }),
       ],
       async (world, { potAddress, method, args }) => {
-        const PotContract = getContract("PotLike");
-        const pot = await PotContract.at<Pot>(world, potAddress.val);
+        const pot = PotLike__factory.connect(
+          potAddress.val,
+          world.hre.ethers.provider
+        );
         const argStrings = args.map((arg) => arg.val);
         return new NumberV(await pot.callStatic[method.val](...argStrings));
       }
@@ -50,8 +50,10 @@ export function mcdFetchers() {
         new Arg("args", getCoreValue, { variadic: true, mapped: true }),
       ],
       async (world, { vatAddress, method, args }) => {
-        const VatContract = getContract("VatLike");
-        const vat = await VatContract.at<Vat>(world, vatAddress.val);
+        const vat = VatLike__factory.connect(
+          vatAddress.val,
+          world.hre.ethers.provider
+        );
         const argStrings = args.map((arg) => arg.val);
         return new NumberV(await vat.callStatic[method.val](...argStrings));
       }

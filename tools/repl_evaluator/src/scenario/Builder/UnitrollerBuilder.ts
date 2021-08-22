@@ -4,9 +4,7 @@ import { Unitroller } from "../../../../../typechain";
 import { Invokation } from "../Invokation";
 import { Arg, Fetcher, getFetcherValue } from "../Command";
 import { storeAndSaveContract } from "../Networks";
-import { getContract } from "../Contract";
-
-const UnitrollerContract = getContract("Unitroller");
+import { deploy_contract_world } from "../Contract";
 
 export interface UnitrollerData {
   invokation: Invokation<Unitroller>;
@@ -35,9 +33,10 @@ export async function buildUnitroller(
       [],
       async (world, {}) => {
         return {
-          invokation: await UnitrollerContract.deploy<Unitroller>(
+          invokation: await deploy_contract_world<Unitroller>(
             world,
             from,
+            "Unitroller",
             []
           ),
           description: "Unitroller",

@@ -1,24 +1,17 @@
 import { Event } from "../Event";
-import { addAction, World } from "../World";
-import { Invokation, invoke } from "../Invokation";
+import { World } from "../World";
+import { Invokation } from "../Invokation";
 import { getAddressV, getExpNumberV, getStringV } from "../CoreValue";
-import { AddressV, EventV, NothingV, NumberV, StringV } from "../Value";
+import { AddressV, NumberV, StringV } from "../Value";
 import { Arg, Fetcher, getFetcherValue } from "../Command";
 import { storeAndSaveContract } from "../Networks";
-import {
-  deploy_contract_world,
-  getContract,
-  getTestContract,
-} from "../Contract";
+import { deploy_contract_world } from "../Contract";
 import {
   FixedPriceOracle,
-  IUniswapAnchoredView,
   PriceOracle,
   PriceOracle__factory,
   SimplePriceOracle,
-  V1PriceOracleInterface__factory,
 } from "../../../../../typechain";
-import { PriceOracleInterface } from "../../../../../typechain/PriceOracle";
 
 export interface PriceOracleData {
   invokation?: Invokation<PriceOracle>;

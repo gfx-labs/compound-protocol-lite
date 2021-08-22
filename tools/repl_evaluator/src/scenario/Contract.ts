@@ -11,7 +11,7 @@ export interface Raw {
   topics: string[];
 }
 
-export interface Contract extends ethers.Contract {}
+export type Contract = ethers.Contract;
 
 function randomAddress(): string {
   return crypto.randomBytes(20).toString("hex");
@@ -129,14 +129,6 @@ class ContractStub {
       ))
     );
   }
-}
-
-export function getContract(name: string): ContractStub {
-  return new ContractStub(name, false);
-}
-
-export function getTestContract(name: string): ContractStub {
-  return new ContractStub(name, true);
 }
 
 export function setContractName(name: string, contract: Contract): Contract {

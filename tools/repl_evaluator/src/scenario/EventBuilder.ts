@@ -10,7 +10,7 @@ import {
   View,
 } from "./Command";
 import { storeAndSaveContract } from "./Networks";
-import { Contract, getContract } from "./Contract";
+import { Contract, deploy_contract_world } from "./Contract";
 import { getWorldContract } from "./ContractLookup";
 import { mustString } from "./Utils";
 import { Callable, Sendable, invoke } from "./Invokation";
@@ -105,7 +105,9 @@ export function buildContractEvent<T extends Contract>(
   implicit
 ) {
   return async (world: World) => {
-    let contractDeployer = getContract(contractName);
+    let contractDeployer = await world.hre.ethers.getContractFactory(
+      contractName
+    );
     let abis: AbiItem[] = (await world.hre.artifacts.readArtifact(contractName))
       .abi;
 
@@ -161,9 +163,10 @@ export function buildContractEvent<T extends Contract>(
             );
 
             return {
-              invokation: await contractDeployer.deploy<T>(
+              invokation: await deploy_contract_world(
                 world,
                 from,
+                name,
                 paramsEncoded
               ),
               name: name,

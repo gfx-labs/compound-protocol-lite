@@ -1,6 +1,5 @@
 import { Event } from "../Event";
 import { World } from "../World";
-import { GovernorBravoDelegate as GovernorBravo } from "../../../../../typechain/GovernorBravoDelegate";
 import { getAddress } from "../ContractLookup";
 import {
   getAddressV,
@@ -12,10 +11,15 @@ import {
 import { AddressV, BoolV, EventV, NumberV, StringV, Value } from "../Value";
 import { Arg, Fetcher, getFetcherValue } from "../Command";
 import { encodedNumber } from "../Encoding";
+import {
+  GovernorBravoDelegate,
+  GovernorBravoDelegate__factory,
+  GovernorBravoDelegator,
+} from "../../../../../typechain";
 
 export async function getProposalId(
   world: World,
-  governor: GovernorBravo,
+  governor: GovernorBravoDelegate,
   proposalIdent: Event
 ): Promise<number> {
   if (typeof proposalIdent === "string" && proposalIdent === "LastProposal") {
@@ -39,6 +43,8 @@ export async function getProposalId(
   }
 }
 
+type GovernorBravo = GovernorBravoDelegate | GovernorBravoDelegator;
+
 export const proposalStateEnums = {
   0: "Pending",
   1: "Active",
@@ -54,11 +60,20 @@ async function getProposal(
   world: World,
   governor: GovernorBravo,
   proposalIdent: Event,
-  getter: (govener: GovernorBravo, number: encodedNumber) => Promise<Event>
+  getter: (
+    govener: GovernorBravoDelegate,
+    number: encodedNumber
+  ) => Promise<Event>
 ): Promise<Event> {
+  const governorBravo = GovernorBravoDelegate__factory.connect(
+    governor.address,
+    world.hre.ethers.provider
+  );
   return await getter(
-    governor,
-    new NumberV(await getProposalId(world, governor, proposalIdent)).encode()
+    governorBravo,
+    new NumberV(
+      await getProposalId(world, governorBravo, proposalIdent)
+    ).encode()
   );
 }
 
@@ -67,8 +82,12 @@ async function getProposalState(
   governor: GovernorBravo,
   proposalIdent: Event
 ): Promise<StringV> {
-  const proposalId = await getProposalId(world, governor, proposalIdent);
-  const stateEnum = await governor.callStatic.state(proposalId);
+  const governorBravo = GovernorBravoDelegate__factory.connect(
+    governor.address,
+    world.hre.ethers.provider
+  );
+  const proposalId = await getProposalId(world, governorBravo, proposalIdent);
+  const stateEnum = await governorBravo.callStatic.state(proposalId);
   return new StringV(proposalStateEnums[stateEnum]);
 }
 
@@ -76,7 +95,7 @@ function capitalize(s) {
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
-export function proposalFetchers(governor: GovernorBravo) {
+export function proposalFetchers(governor: GovernorBravoDelegate) {
   const fields = {
     id: getNumberV,
     proposer: getAddressV,
@@ -144,11 +163,12 @@ export function proposalFetchers(governor: GovernorBravo) {
       `,
         event,
         [new Arg("proposalIdent", getEventV)],
-        async (world, { proposalIdent }) =>
-          await constructor(
+        async (world, { proposalIdent }) => {
+          return await constructor(
             world,
             await getProposal(world, governor, proposalIdent.val, getter)
-          ),
+          );
+        },
         { namePos: 1 }
       );
     }
@@ -233,7 +253,7 @@ export function proposalFetchers(governor: GovernorBravo) {
 
 export async function getProposalValue(
   world: World,
-  governor: GovernorBravo,
+  governor: GovernorBravoDelegate,
   event: Event
 ): Promise<Value> {
   return await getFetcherValue<any, any>(

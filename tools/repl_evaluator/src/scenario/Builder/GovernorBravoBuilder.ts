@@ -5,14 +5,12 @@ import { getAddressV, getNumberV, getStringV } from "../CoreValue";
 import { AddressV, NumberV, StringV } from "../Value";
 import { Arg, Fetcher, getFetcherValue } from "../Command";
 import { storeAndSaveContract } from "../Networks";
-import { deploy_contract_world, getContract } from "../Contract";
+import { deploy_contract_world } from "../Contract";
 import { GovernorBravo } from "../ContractLookup";
 import {
   GovernorBravoDelegate,
-  GovernorBravoDelegateHarness,
   GovernorBravoDelegator,
 } from "../../../../../typechain";
-import { ethers } from "ethers";
 
 export interface GovernorBravoData {
   invokation: Invokation<GovernorBravo>;

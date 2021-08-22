@@ -119,6 +119,11 @@ export async function mapValue<T>(
     }
   }
 
+  // this type check *should* work but idk.
+  if (world.hre.ethers.BigNumber.isBigNumber(event)) {
+    return simple(event.toString());
+  }
+
   try {
     val = await complex(world, event);
   } catch (complexErr) {
@@ -186,7 +191,7 @@ function strToNumberV(str: string): NumberV {
     throw "not a number";
   }
 
-  return new NumberV(str);
+  return new NumberV(str.toString());
 }
 
 function strToExpNumberV(str: string): NumberV {

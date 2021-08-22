@@ -1,9 +1,10 @@
 import { fromJS, Map } from "immutable";
 import { World } from "./World";
 import { Invokation } from "./Invokation";
-import { Contract, setContractName } from "./Contract";
+import { setContractName } from "./Contract";
 import { getNetworkPath, readFile, writeFile } from "./File";
 import { Fragment } from "ethers/lib/utils";
+import { ethers } from "ethers";
 
 type Networks = Map<string, any>;
 
@@ -43,12 +44,10 @@ function writeNetworkFile(
 
 export function storeContract(
   world: World,
-  contract: Contract,
+  contract: ethers.Contract,
   name: string,
   extraData: ExtraData[]
 ): World {
-  contract = setContractName(name, contract);
-
   world = world.set("lastContract", contract);
   world = world.setIn(
     ["contractIndex", contract.address.toLowerCase()],
@@ -70,7 +69,7 @@ export function storeContract(
 
 export async function saveContract<T>(
   world: World,
-  contract: Contract,
+  contract: ethers.Contract,
   name: string,
   extraData: ExtraData[]
 ): Promise<World> {
@@ -96,54 +95,10 @@ export async function saveContract<T>(
 export async function mergeContractABI(
   world: World,
   targetName: string,
-  contractTarget: Contract,
+  contractTarget: ethers.Contract,
   a: string,
   b: string
 ): Promise<World> {
-  let networks = await readNetworkFile(world, false);
-  let networksABI = await readNetworkFile(world, true);
-  let aABI = networksABI.get(a);
-  let bABI = networksABI.get(b);
-
-  if (!aABI) {
-    throw new Error(`Missing contract ABI for ${a}`);
-  }
-
-  if (!bABI) {
-    throw new Error(`Missing contract ABI for ${b}`);
-  }
-
-  const itemBySig: { [key: string]: Fragment } = {};
-  for (let item of aABI.toJS().concat(bABI.toJS())) {
-    itemBySig[item.signature] = item;
-  }
-  const fullABI = Object.values(itemBySig);
-  // Store Comptroller address
-  networks = networks.setIn(["Contracts", targetName], contractTarget.address);
-  world = world.setIn(
-    ["contractData", "Contracts", targetName],
-    contractTarget.address
-  );
-
-  networksABI = networksABI.set(targetName, fullABI);
-
-  let mergedContract = new world.hre.ethers.Contract(
-    contractTarget.address,
-    fullABI
-  );
-
-  /// XXXS
-  world = world.setIn(
-    ["contractIndex", contractTarget.address.toLowerCase()],
-    setContractName(targetName, <Contract>(<unknown>mergedContract))
-  );
-
-  // Don't write during a dry-run
-  if (!world.dryRun) {
-    world = await writeNetworkFile(world, networks, false);
-    world = await writeNetworkFile(world, networksABI, true);
-  }
-
   return world;
 }
 
@@ -192,7 +147,7 @@ export async function loadContractData(
 
 export async function storeAndSaveContract<T>(
   world: World,
-  contract: Contract,
+  contract: ethers.Contract,
   name: string,
   invokation: Invokation<T> | null,
   extraData: ExtraData[]

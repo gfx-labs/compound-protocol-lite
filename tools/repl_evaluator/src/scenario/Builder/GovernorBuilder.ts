@@ -1,11 +1,11 @@
 import { Event } from "../Event";
 import { World } from "../World";
 import { Invokation } from "../Invokation";
-import { getAddressV, getNumberV, getStringV } from "../CoreValue";
-import { AddressV, NumberV, StringV } from "../Value";
+import { getAddressV, getStringV } from "../CoreValue";
+import { AddressV, StringV } from "../Value";
 import { Arg, Fetcher, getFetcherValue } from "../Command";
 import { storeAndSaveContract } from "../Networks";
-import { deploy_contract_world, getContract } from "../Contract";
+import { deploy_contract_world } from "../Contract";
 import { GovernorAlpha, GovernorAlphaHarness } from "../../../../../typechain";
 
 export interface GovernorData {

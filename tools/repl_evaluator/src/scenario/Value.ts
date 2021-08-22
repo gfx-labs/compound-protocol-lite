@@ -278,7 +278,7 @@ export class NumberV implements Value {
   }
 
   encode() {
-    return ethers.BigNumber.from(this.val);
+    return ethers.BigNumber.from(new BigNumber(this.val).toString(10));
   }
 
   compareTo(world: World, given: Value): boolean {

@@ -289,7 +289,6 @@ export async function invoke<T>(
       params: [from],
     });
 
-    console.log("al;l logs", receipt.logs);
     //  if (world.settings.printTxLogs) {
     const eventLogs = Object.values((receipt && receipt.logs) || {});
 

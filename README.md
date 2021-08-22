@@ -9,6 +9,14 @@ Experimental [Hardhat](https://hardhat.org/) repo.
 npm install
 npm run build
 
+optional:
+
+TS_NODE_TRANSPILE_ONLY=1
+
+that will speed up ur scen runner a lot a lot
+
+
+
 npx hardhat scen --file spec/sim/0008-sweep-token/hypothetical_migration.scen
 
 or

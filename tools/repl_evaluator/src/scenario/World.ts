@@ -1,6 +1,5 @@
 import { Expect, throwExpect } from "./Assert";
 import { Action } from "./Action";
-import { Contract } from "./Contract";
 import { Record } from "immutable";
 import { Printer } from "./Printer";
 import { Invariant } from "./Invariant";
@@ -22,7 +21,7 @@ import { ethers } from "ethers";
 
 const startingBlockNumber = 1000;
 
-type ContractIndex = { [address: string]: Contract };
+type ContractIndex = { [address: string]: ethers.Contract };
 type Counter = { value: number };
 
 export interface WorldProps {
@@ -32,7 +31,7 @@ export interface WorldProps {
   newInvokation: boolean;
   blockNumber: number;
   gasCounter: Counter;
-  lastContract: Contract | null;
+  lastContract: ethers.Contract | null;
   invariants: Invariant[];
   expectations: Expectation[];
   contractIndex: ContractIndex;
@@ -91,7 +90,7 @@ export class World extends Record(defaultWorldProps) {
   public readonly newInvokation!: boolean;
   public readonly blockNumber!: number;
   public readonly gasCounter!: Counter;
-  public readonly lastContract!: Contract | null;
+  public readonly lastContract!: ethers.Contract | null;
   public readonly invariants!: Invariant[];
   public readonly expectations!: Expectation[];
   public readonly contractIndex!: ContractIndex;

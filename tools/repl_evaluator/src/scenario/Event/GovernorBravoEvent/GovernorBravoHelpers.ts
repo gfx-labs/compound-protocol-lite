@@ -82,13 +82,14 @@ export const propose = async (
   calldatas: string[],
   description: string
 ): Promise<World> => {
-  const governorBravo = new GovernorBravoDelegate__factory().attach(
-    governor.address
+  const governorBravo = GovernorBravoDelegate__factory.connect(
+    governor.address,
+    world.hre.ethers.provider
   );
   const invokation = await invoke(
     world,
     from,
-    governor,
+    governorBravo,
     await governorBravo.populateTransaction.propose(
       targets,
       values,
@@ -111,13 +112,14 @@ export const setVotingDelay = async (
   governor: GovernorBravo,
   newVotingDelay: NumberV
 ): Promise<World> => {
-  const governorBravo = new GovernorBravoDelegate__factory().attach(
-    governor.address
+  const governorBravo = GovernorBravoDelegate__factory.connect(
+    governor.address,
+    world.hre.ethers.provider
   );
   let invokation = await invoke(
     world,
     from,
-    governor,
+    governorBravo,
     await governorBravo.populateTransaction._setVotingDelay(
       newVotingDelay.encode()
     ),
@@ -139,13 +141,14 @@ export const setVotingPeriod = async (
   governor: GovernorBravo,
   newVotingPeriod: NumberV
 ): Promise<World> => {
-  const governorBravo = new GovernorBravoDelegate__factory().attach(
-    governor.address
+  const governorBravo = GovernorBravoDelegate__factory.connect(
+    governor.address,
+    world.hre.ethers.provider
   );
   let invokation = await invoke(
     world,
     from,
-    governor,
+    governorBravo,
     await governorBravo.populateTransaction._setVotingPeriod(
       newVotingPeriod.encode()
     ),
@@ -167,14 +170,15 @@ export const setProposalThreshold = async (
   governor: GovernorBravo,
   newProposalThreshold: NumberV
 ): Promise<World> => {
-  const governorBravo = new GovernorBravoDelegate__factory().attach(
-    governor.address
+  const governorBravo = GovernorBravoDelegate__factory.connect(
+    governor.address,
+    world.hre.ethers.provider
   );
 
   let invokation = await invoke(
     world,
     from,
-    governor,
+    governorBravo,
     await governorBravo.populateTransaction._setProposalThreshold(
       newProposalThreshold.encode()
     ),
@@ -196,13 +200,14 @@ export const setImplementation = async (
   governor: GovernorBravo,
   newImplementation: GovernorBravo
 ): Promise<World> => {
-  const governorBravoDelegator = new GovernorBravoDelegator__factory().attach(
-    governor.address
+  const governorBravoDelegator = GovernorBravoDelegator__factory.connect(
+    governor.address,
+    world.hre.ethers.provider
   );
   let invokation = await invoke(
     world,
     from,
-    governor,
+    governorBravoDelegator,
     await governorBravoDelegator.populateTransaction._setImplementation(
       newImplementation.address
     ),
@@ -226,13 +231,14 @@ export const initiate = async (
   governor: GovernorBravo,
   governorAlpha: string
 ): Promise<World> => {
-  const governorBravo = new GovernorBravoDelegate__factory().attach(
-    governor.address
+  const governorBravo = GovernorBravoDelegate__factory.connect(
+    governor.address,
+    world.hre.ethers.provider
   );
   let invokation = await invoke(
     world,
     from,
-    governor,
+    governorBravo,
     await governorBravo.populateTransaction._initiate(governorAlpha),
     "governorAlpha"
   );
@@ -251,13 +257,14 @@ export const harnessInitiate = async (
   from: string,
   governor: GovernorBravo
 ): Promise<World> => {
-  const governorBravo = new GovernorBravoDelegate__factory().attach(
-    governor.address
+  const governorBravo = GovernorBravoDelegate__factory.connect(
+    governor.address,
+    world.hre.ethers.provider
   );
   let invokation = await invoke(
     world,
     from,
-    governor,
+    governorBravo,
     await governorBravo.populateTransaction["_initiate()"](),
     "_initiate"
   );
@@ -277,13 +284,14 @@ export const setPendingAdmin = async (
   governor: GovernorBravo,
   newPendingAdmin: string
 ): Promise<World> => {
-  const governorBravo = new GovernorBravoDelegate__factory().attach(
-    governor.address
+  const governorBravo = GovernorBravoDelegate__factory.connect(
+    governor.address,
+    world.hre.ethers.provider
   );
   let invokation = await invoke(
     world,
     from,
-    governor,
+    governorBravo,
     await governorBravo.populateTransaction._setPendingAdmin(newPendingAdmin),
     "_setPendingAdmin"
   );
@@ -302,13 +310,14 @@ export const acceptAdmin = async (
   from: string,
   governor: GovernorBravo
 ): Promise<World> => {
-  const governorBravo = new GovernorBravoDelegate__factory().attach(
-    governor.address
+  const governorBravo = GovernorBravoDelegate__factory.connect(
+    governor.address,
+    world.hre.ethers.provider
   );
   let invokation = await invoke(
     world,
     from,
-    governor,
+    governorBravo,
     await governorBravo.populateTransaction._acceptAdmin(),
     "_acceptAdmin"
   );

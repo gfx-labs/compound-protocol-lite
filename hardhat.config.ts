@@ -17,7 +17,6 @@ task("scen", "run scenario")
       console.log(args.file);
       const child = exec(`npx ts-node scripts/scen.ts --file ${args.file}`);
       child.stdout.pipe(process.stdout);
-      child.stdout.pipe(process.stderr);
       child.once("close", resolve);
       child.once("error", reject);
     });

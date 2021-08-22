@@ -1,12 +1,12 @@
 import { Event } from "../Event";
-import { World, addAction } from "../World";
+import { World } from "../World";
 import { Comp, CompScenario } from "../../../../../typechain";
 import { Invokation } from "../Invokation";
 import { getAddressV } from "../CoreValue";
-import { StringV, AddressV } from "../Value";
+import { AddressV } from "../Value";
 import { Arg, Fetcher, getFetcherValue } from "../Command";
 import { storeAndSaveContract } from "../Networks";
-import { deploy_contract_world, getContract } from "../Contract";
+import { deploy_contract_world } from "../Contract";
 
 export interface TokenData {
   invokation: Invokation<Comp>;

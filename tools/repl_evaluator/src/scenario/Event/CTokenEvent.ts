@@ -4,6 +4,7 @@ import {
   CErc20Delegate,
   CErc20Delegate__factory,
   CErc20Delegator,
+  CErc20Delegator__factory,
   CTokenScenario,
   CTokenScenario__factory,
 } from "../../../../../typechain";
@@ -20,7 +21,7 @@ import {
   getBoolV,
 } from "../CoreValue";
 import { AddressV, BoolV, EventV, NothingV, NumberV, StringV } from "../Value";
-import { decodeCall, getContract } from "../Contract";
+import { decodeCall } from "../Contract";
 import { Arg, Command, View, processCommandEvent } from "../Command";
 import { CTokenErrorReporter } from "../ErrorReporter";
 import { getComptroller, getCTokenData } from "../ContractLookup";
@@ -661,10 +662,9 @@ async function resignImplementation(
   from: string,
   cToken: CToken
 ): Promise<World> {
-  const cErc20Delegate = getContract("CErc20Delegate");
-  const cErc20DelegateContract = await cErc20Delegate.at<CErc20Delegate>(
-    world,
-    cToken.address
+  const cErc20DelegateContract = CErc20Delegate__factory.connect(
+    cToken.address,
+    world.hre.ethers.provider
   );
 
   let invokation = await invoke(

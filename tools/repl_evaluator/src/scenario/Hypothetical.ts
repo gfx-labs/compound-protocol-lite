@@ -27,5 +27,9 @@ export async function fork(
       },
     ],
   });
+  console.log(
+    "FORKED TO BLOCK#",
+    await world.hre.ethers.provider.getBlockNumber()
+  );
   return world;
 }

@@ -21,6 +21,7 @@ import {
   GovernorAlpha,
 } from "../../../../typechain";
 import { ComptrollerImplS } from "./Event/ComptrollerEvent";
+import { ethers } from "ethers";
 
 export type GovernorBravo = GovernorBravoDelegate | GovernorBravoDelegator;
 
@@ -46,6 +47,8 @@ function getContractData(world: World, indices: string[][]): ContractDataEl {
       }, world.contractData);
     }
   }, undefined);
+
+  console.log(out, indices);
   return out;
 }
 
@@ -63,14 +66,21 @@ function getContractDataString(world: World, indices: string[][]): string {
   return value;
 }
 
-export function getWorldContract<T>(world: World, indices: string[][]): T {
+export function getWorldContract<T extends ethers.Contract>(
+  world: World,
+  indices: string[][]
+): T {
   const address = getContractDataString(world, indices);
 
   return getWorldContractByAddress<T>(world, address);
 }
 
-export function getWorldContractByAddress<T>(world: World, address: string): T {
+export function getWorldContractByAddress<T extends ethers.Contract>(
+  world: World,
+  address: string
+): T {
   let contract = world.contractIndex[address.toLowerCase()];
+  console.log(contract);
 
   if (!contract) {
     throw new Error(
@@ -79,32 +89,35 @@ export function getWorldContractByAddress<T>(world: World, address: string): T {
       )}`
     );
   }
+
   contract = contract.connect(world.hre.ethers.provider);
 
-  return <T>(<unknown>contract);
+  return <T>contract;
 }
 
 export async function getTimelock(world: World): Promise<Timelock> {
-  return getWorldContract(world, [["Contracts", "Timelock"]]);
+  return getWorldContract<Timelock>(world, [["Contracts", "Timelock"]]);
 }
 
 export async function getUnitroller(world: World): Promise<Unitroller> {
-  return getWorldContract(world, [["Contracts", "Unitroller"]]);
+  return getWorldContract<Unitroller>(world, [["Contracts", "Unitroller"]]);
 }
 
 export async function getMaximillion(world: World): Promise<Maximillion> {
-  return getWorldContract(world, [["Contracts", "Maximillion"]]);
+  return getWorldContract<Maximillion>(world, [["Contracts", "Maximillion"]]);
 }
 
 export async function getComptroller(world: World): Promise<ComptrollerImplS> {
-  return getWorldContract(world, [["Contracts", "Comptroller"]]);
+  return getWorldContract<ComptrollerImplS>(world, [
+    ["Contracts", "Comptroller"],
+  ]);
 }
 
 export async function getComptrollerImpl(
   world: World,
   comptrollerImplArg: Event
 ): Promise<ComptrollerImplS> {
-  return getWorldContract(world, [
+  return getWorldContract<ComptrollerImplS>(world, [
     ["Comptroller", mustString(comptrollerImplArg), "address"],
   ]);
 }
@@ -134,23 +147,31 @@ export function getGovernorBravo(
   world: World,
   governoBravoArg: string
 ): Promise<GovernorBravo> {
-  return getWorldContract(world, [["Contracts", "GovernorBravo"]]);
+  return Promise.resolve(
+    getWorldContract<GovernorBravo>(world, [["Contracts", "GovernorBravo"]])
+  );
 }
 
 export async function getPriceOracleProxy(world: World): Promise<PriceOracle> {
-  return getWorldContract(world, [["Contracts", "PriceOracleProxy"]]);
+  return Promise.resolve(
+    getWorldContract<PriceOracle>(world, [["Contracts", "PriceOracleProxy"]])
+  );
 }
 
 export async function getAnchoredView(world: World): Promise<AnchoredView> {
-  return getWorldContract(world, [["Contracts", "AnchoredView"]]);
+  return Promise.resolve(
+    getWorldContract<AnchoredView>(world, [["Contracts", "AnchoredView"]])
+  );
 }
 
 export async function getPriceOracle(world: World): Promise<PriceOracle> {
-  return getWorldContract(world, [["Contracts", "PriceOracle"]]);
+  return Promise.resolve(
+    getWorldContract<PriceOracle>(world, [["Contracts", "PriceOracle"]])
+  );
 }
 
 export async function getComp(world: World, compArg: Event): Promise<Comp> {
-  return getWorldContract(world, [["COMP", "address"]]);
+  return Promise.resolve(getWorldContract<Comp>(world, [["COMP", "address"]]));
 }
 
 export async function getCompData(
@@ -179,9 +200,11 @@ export async function getInterestRateModel(
   world: World,
   interestRateModelArg: Event
 ): Promise<InterestRateModel> {
-  return getWorldContract(world, [
-    ["InterestRateModel", mustString(interestRateModelArg), "address"],
-  ]);
+  return Promise.resolve(
+    getWorldContract<InterestRateModel>(world, [
+      ["InterestRateModel", mustString(interestRateModelArg), "address"],
+    ])
+  );
 }
 
 export async function getInterestRateModelData(

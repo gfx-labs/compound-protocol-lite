@@ -1,6 +1,6 @@
 import { Event } from "../Event";
 import { addAction, World } from "../World";
-import { PriceOracleProxy } from "../Contract/PriceOracleProxy";
+import { PriceOracleProxy } from "../../../../../typechain/PriceOracleProxy";
 import { buildPriceOracleProxy } from "../Builder/PriceOracleProxyBuilder";
 import { invoke } from "../Invokation";
 import {
@@ -31,7 +31,7 @@ async function genPriceOracleProxy(
 
   world = addAction(
     world,
-    `Deployed PriceOracleProxy to address ${priceOracleProxy._address}`,
+    `Deployed PriceOracleProxy to address ${priceOracleProxy.address}`,
     invokation
   );
 
@@ -54,7 +54,7 @@ async function verifyPriceOracleProxy(
       apiKey,
       "PriceOracleProxy",
       contractName,
-      priceOracleProxy._address
+      priceOracleProxy.address
     );
   }
 

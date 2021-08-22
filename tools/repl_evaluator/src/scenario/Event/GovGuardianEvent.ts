@@ -1,6 +1,5 @@
 import { Event } from "../Event";
 import { addAction, describeUser, World } from "../World";
-import { Governor } from "../Contract/Governor";
 import { invoke } from "../Invokation";
 import {
   getAddressV,
@@ -11,8 +10,13 @@ import {
 } from "../CoreValue";
 import { AddressV, EventV, NumberV, StringV } from "../Value";
 import { Arg, Command, processCommandEvent, View } from "../Command";
+import {
+  GovernorAlpha,
+  GovernorAlphaHarness,
+  GovernorAlphaHarness__factory,
+} from "../../../../../typechain";
 
-export function guardianCommands(governor: Governor) {
+export function guardianCommands(governor: GovernorAlphaHarness) {
   return [
     new Command<{ newPendingAdmin: AddressV; eta: NumberV }>(
       `
@@ -126,13 +130,16 @@ export function guardianCommands(governor: Governor) {
 
 export async function processGuardianEvent(
   world: World,
-  governor: Governor,
+  governor: GovernorAlpha,
   event: Event,
   from: string | null
 ): Promise<World> {
+  const governorAlpha = new GovernorAlphaHarness__factory().attach(
+    governor.address
+  );
   return await processCommandEvent<any>(
     "Guardian",
-    guardianCommands(governor),
+    guardianCommands(governorAlpha),
     world,
     event,
     from

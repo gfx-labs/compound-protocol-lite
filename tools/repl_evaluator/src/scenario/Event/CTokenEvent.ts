@@ -1,9 +1,15 @@
 import { Event } from "../Event";
 import { addAction, describeUser, World } from "../World";
-import { decodeCall, getPastEvents } from "../Contract";
-import { CToken, CTokenScenario } from "../Contract/CToken";
-import { CErc20Delegate } from "../Contract/CErc20Delegate";
-import { CErc20Delegator } from "../Contract/CErc20Delegator";
+import {
+  CErc20Delegate,
+  CErc20Delegate__factory,
+  CErc20Delegator,
+  CTokenScenario,
+  CTokenScenario__factory,
+} from "../../../../../typechain";
+
+type CToken = CErc20Delegator | CErc20Delegate;
+
 import { invoke, Sendable } from "../Invokation";
 import {
   getAddressV,
@@ -14,7 +20,7 @@ import {
   getBoolV,
 } from "../CoreValue";
 import { AddressV, BoolV, EventV, NothingV, NumberV, StringV } from "../Value";
-import { getContract } from "../Contract";
+import { decodeCall, getContract } from "../Contract";
 import { Arg, Command, View, processCommandEvent } from "../Command";
 import { CTokenErrorReporter } from "../ErrorReporter";
 import { getComptroller, getCTokenData } from "../ContractLookup";
@@ -24,6 +30,7 @@ import { verify } from "../Verify";
 import { getLiquidity } from "../Value/ComptrollerValue";
 import { encodedNumber } from "../Encoding";
 import { getCTokenV, getCErc20DelegatorV } from "../Value/CTokenValue";
+import { BigNumber } from "ethers";
 
 function showTrxValue(world: World): string {
   return new NumberV(world.trxInvokationOpts.get("value")).show();
@@ -34,16 +41,15 @@ async function genCToken(
   from: string,
   event: Event
 ): Promise<World> {
-  let { world: nextWorld, cToken, tokenData } = await buildCToken(
-    world,
-    from,
-    event
-  );
+  let {
+    world: nextWorld,
+    cToken,
+    tokenData,
+  } = await buildCToken(world, from, event);
   world = nextWorld;
-
   world = addAction(
     world,
-    `Added cToken ${tokenData.name} (${tokenData.contract}<decimals=${tokenData.decimals}>) at address ${cToken._address}`,
+    `Added cToken ${tokenData.name} (${tokenData.contract}<decimals=${tokenData.decimals}>) at address ${cToken.address}`,
     tokenData.invokation
   );
 
@@ -98,7 +104,7 @@ async function mint(
       world,
       from,
       cToken,
-      await cToken.populateTransaction.mint(),
+      await cToken.populateTransaction["mint()"](),
       "mint",
       CTokenErrorReporter
     );
@@ -219,7 +225,7 @@ async function repayBorrow(
       world,
       from,
       cToken,
-      await cToken.populateTransaction.repayBorrow(),
+      await cToken.populateTransaction["repayBorrow()"](),
       "repayBorrow",
       CTokenErrorReporter
     );
@@ -266,7 +272,7 @@ async function repayBorrowBehalf(
       world,
       from,
       cToken,
-      await cToken.populateTransaction.repayBorrowBehalf(behalf),
+      await cToken.populateTransaction["repayBorrowBehalf(address)"](behalf),
       "repayBorrowBehalf",
       CTokenErrorReporter
     );
@@ -307,7 +313,7 @@ async function liquidateBorrow(
       await cToken.populateTransaction.liquidateBorrow(
         borrower,
         repayAmount.encode(),
-        collateral._address
+        collateral.address
       ),
       "liquidateBorrow",
       CTokenErrorReporter
@@ -318,9 +324,9 @@ async function liquidateBorrow(
       world,
       from,
       cToken,
-      await cToken.populateTransaction.liquidateBorrow(
+      await cToken.populateTransaction["liquidateBorrow(address,address)"](
         borrower,
-        collateral._address
+        collateral.address
       ),
       "liquidateBorrow",
       CTokenErrorReporter
@@ -391,12 +397,9 @@ async function evilSeize(
     world,
     from,
     cToken,
-    await cToken.populateTransaction.evilSeize(
-      treasure._address,
-      liquidator,
-      borrower,
-      seizeTokens.encode()
-    ),
+    await cToken.populateTransaction[
+      "evilSeize(address,address,address,uint256)"
+    ](treasure.address, liquidator, borrower, seizeTokens.encode()),
     "evilSeize",
     CTokenErrorReporter
   );
@@ -626,17 +629,15 @@ async function becomeImplementation(
   cToken: CToken,
   becomeImplementationData: string
 ): Promise<World> {
-  const cErc20Delegate = getContract("CErc20Delegate");
-  const cErc20DelegateContract = await cErc20Delegate.at<CErc20Delegate>(
-    world,
-    cToken._address
+  const cErc20DelegateContract = new CErc20Delegate__factory().attach(
+    cToken.address
   );
 
   let invokation = await invoke(
     world,
     from,
     cErc20DelegateContract,
-    await cErc20DelegateContract.populateTransactiona._becomeImplementation(
+    await cErc20DelegateContract.populateTransaction._becomeImplementation(
       becomeImplementationData
     ),
     "_becomeImplementation",
@@ -663,7 +664,7 @@ async function resignImplementation(
   const cErc20Delegate = getContract("CErc20Delegate");
   const cErc20DelegateContract = await cErc20Delegate.at<CErc20Delegate>(
     world,
-    cToken._address
+    cToken.address
   );
 
   let invokation = await invoke(
@@ -729,7 +730,7 @@ async function donate(
     world,
     from,
     cToken,
-    await cToken.populateTransaction.donate(),
+    await cToken.populateTransaction["donate()"](),
     "donate",
     CTokenErrorReporter
   );
@@ -745,6 +746,10 @@ async function donate(
 
   return world;
 }
+
+const canMock = (o: any): o is CTokenScenario => {
+  return o.populateTransaction["setTotalBorrows"] != undefined;
+};
 
 async function setCTokenMock(
   world: World,
@@ -779,7 +784,7 @@ async function setCTokenMock(
 
   world = addAction(
     world,
-    `Mocked ${mock}=${value.show()} for ${cToken.name}`,
+    `Mocked ${mock}=${value.show()} for ${cToken.address}`,
     invokation
   );
 
@@ -798,16 +803,16 @@ async function verifyCToken(
       `Politely declining to verify on local network: ${world.network}.`
     );
   } else {
-    await verify(world, apiKey, name, contract, cToken._address);
+    await verify(world, apiKey, name, contract, cToken.address);
   }
 
   return world;
 }
 
 async function printMinters(world: World, cToken: CToken): Promise<World> {
-  let events = await getPastEvents(world, cToken, cToken.name, "Mint");
+  const events = await cToken.queryFilter(cToken.filters.Mint());
   let addresses = events.map((event) => {
-    event.args["minter"];
+    return event.args.minter;
   });
   let uniq = [...new Set(addresses)];
 
@@ -821,8 +826,8 @@ async function printMinters(world: World, cToken: CToken): Promise<World> {
 }
 
 async function printBorrowers(world: World, cToken: CToken): Promise<World> {
-  let events = await getPastEvents(world, cToken, cToken.name, "Borrow");
-  let addresses = events.map((event) => event.args["borrower"]);
+  const events = await cToken.queryFilter(cToken.filters.Borrow());
+  let addresses = events.map((event) => event.args.borrower);
   let uniq = [...new Set(addresses)];
 
   world.printer.printLine("Borrowers:");
@@ -835,9 +840,9 @@ async function printBorrowers(world: World, cToken: CToken): Promise<World> {
 }
 
 async function printLiquidity(world: World, cToken: CToken): Promise<World> {
-  let mintEvents = await getPastEvents(world, cToken, cToken.name, "Mint");
+  const mintEvents = await cToken.queryFilter(cToken.filters.Mint());
   let mintAddresses = mintEvents.map((event) => event.args["minter"]);
-  let borrowEvents = await getPastEvents(world, cToken, cToken.name, "Borrow");
+  const borrowEvents = await cToken.queryFilter(cToken.filters.Borrow());
   let borrowAddresses = borrowEvents.map((event) => event.args["borrower"]);
   let uniq = [...new Set(mintAddresses.concat(borrowAddresses))];
   let comptroller = await getComptroller(world);
@@ -854,7 +859,9 @@ async function printLiquidity(world: World, cToken: CToken): Promise<World> {
 
   liquidityMap.forEach(([address, liquidity]) => {
     world.printer.printLine(
-      `\t${world.settings.lookupAlias(address)}: ${liquidity / 1e18}e18`
+      `\t${world.settings.lookupAlias(address)}: ${BigNumber.from(liquidity)
+        .div(1e18)
+        .toString()}e18`
     );
   });
 
@@ -885,17 +892,10 @@ export function cTokenCommands() {
       "Verify",
       [new Arg("cTokenArg", getStringV), new Arg("apiKey", getStringV)],
       async (world, { cTokenArg, apiKey }) => {
-        let [cToken, name, data] = await getCTokenData(world, cTokenArg.val);
-
-        return await verifyCToken(
-          world,
-          cToken,
-          name,
-          data.get("contract")!,
-          apiKey.val
-        );
-      },
-      { namePos: 1 }
+        // let [cToken, name, data] = await getCTokenData(world, cTokenArg.val);
+        console.log("currently not verifying");
+        return Promise.resolve(world);
+      }
     ),
     new Command<{ cToken: CToken }>(
       `
@@ -1282,9 +1282,12 @@ export function cTokenCommands() {
         new Arg("variable", getStringV),
         new Arg("value", getNumberV),
       ],
-      (world, from, { cToken, variable, value }) =>
-        setCTokenMock(world, from, <CTokenScenario>cToken, variable.val, value),
-      { namePos: 1 }
+      (world, from, { cToken, variable, value }) => {
+        if (canMock(cToken)) {
+          return setCTokenMock(world, from, cToken, variable.val, value);
+        }
+        return Promise.resolve(world);
+      }
     ),
     new View<{ cToken: CToken }>(
       `

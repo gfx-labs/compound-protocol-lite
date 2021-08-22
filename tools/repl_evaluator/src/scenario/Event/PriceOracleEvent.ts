@@ -1,6 +1,7 @@
 import { Event } from "../Event";
 import { addAction, World } from "../World";
-import { PriceOracle } from "../Contract/PriceOracle";
+import { SimplePriceOracle } from "../../../../../typechain";
+type PriceOracle = SimplePriceOracle;
 import {
   buildPriceOracle,
   setPriceOracle,
@@ -32,7 +33,7 @@ async function genPriceOracle(
 
   world = addAction(
     world,
-    `Deployed PriceOracle (${priceOracleData.description}) to address ${priceOracle._address}`,
+    `Deployed PriceOracle (${priceOracleData.description}) to address ${priceOracle.address}`,
     priceOracleData.invokation!
   );
 
@@ -40,10 +41,11 @@ async function genPriceOracle(
 }
 
 async function setPriceOracleFn(world: World, params: Event): Promise<World> {
-  let { world: nextWorld, priceOracle, priceOracleData } = await setPriceOracle(
-    world,
-    params
-  );
+  let {
+    world: nextWorld,
+    priceOracle,
+    priceOracleData,
+  } = await setPriceOracle(world, params);
 
   return nextWorld;
 }
@@ -110,7 +112,7 @@ async function verifyPriceOracle(
       apiKey,
       "PriceOracle",
       contractName,
-      priceOracle._address
+      priceOracle.address
     );
   }
 

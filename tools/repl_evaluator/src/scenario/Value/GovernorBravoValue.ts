@@ -1,6 +1,6 @@
 import { Event } from "../Event";
 import { World } from "../World";
-import { GovernorBravo } from "../Contract/GovernorBravo";
+import { GovernorBravoDelegate as GovernorBravo } from "../../../../../typechain/GovernorBravoDelegate";
 import { getCoreValue, getEventV, mapValue } from "../CoreValue";
 import { AddressV, NumberV, EventV, Value } from "../Value";
 import { Arg, Fetcher, getFetcherValue } from "../Command";
@@ -26,52 +26,52 @@ export async function getGovernorV(
 }
 
 async function governorAddress(
-  world: World,
+  _world: World,
   governor: GovernorBravo
 ): Promise<AddressV> {
-  return new AddressV(governor._address);
+  return new AddressV(governor.address);
 }
 
 async function getAdmin(
-  world: World,
+  _world: World,
   governor: GovernorBravo
 ): Promise<AddressV> {
-  return new AddressV(await governor.methods.admin().call());
+  return new AddressV(await governor.callStatic.admin());
 }
 
 async function getPendingAdmin(
-  world: World,
+  _world: World,
   governor: GovernorBravo
 ): Promise<AddressV> {
-  return new AddressV(await governor.methods.pendingAdmin().call());
+  return new AddressV(await governor.callStatic.pendingAdmin());
 }
 
 async function getImplementation(
-  world: World,
+  _world: World,
   governor: GovernorBravo
 ): Promise<AddressV> {
-  return new AddressV(await governor.methods.implementation().call());
+  return new AddressV(await governor.callStatic.implementation());
 }
 
 async function getProposalThreshold(
-  world: World,
+  _world: World,
   governor: GovernorBravo
 ): Promise<NumberV> {
-  return new NumberV(await governor.methods.proposalThreshold().call());
+  return new NumberV(await governor.callStatic.proposalThreshold());
 }
 
 async function getVotingPeriod(
-  world: World,
+  _world: World,
   governor: GovernorBravo
 ): Promise<NumberV> {
-  return new NumberV(await governor.methods.votingPeriod().call());
+  return new NumberV(await governor.callStatic.votingPeriod());
 }
 
 async function getVotingDelay(
-  world: World,
+  _world: World,
   governor: GovernorBravo
 ): Promise<NumberV> {
-  return new NumberV(await governor.methods.votingDelay().call());
+  return new NumberV(await governor.callStatic.votingDelay());
 }
 
 export function governorBravoFetchers() {
@@ -132,7 +132,7 @@ export function governorBravoFetchers() {
       `
         #### ProposalThreshold
 
-        * "GovernorBravo <Governor> ProposalThreshold" - Returns the proposal threshold of the given governorBravo 
+        * "GovernorBravo <Governor> ProposalThreshold" - Returns the proposal threshold of the given governorBravo
         * E.g. "GovernorBravo GovernorBravoScenario ProposalThreshold"
       `,
       "ProposalThreshold",
@@ -145,7 +145,7 @@ export function governorBravoFetchers() {
       `
         #### VotingPeriod
 
-        * "GovernorBravo <Governor> VotingPeriod" - Returns the voting period of the given governorBravo 
+        * "GovernorBravo <Governor> VotingPeriod" - Returns the voting period of the given governorBravo
         * E.g. "GovernorBravo GovernorBravoScenario VotingPeriod"
       `,
       "VotingPeriod",
@@ -158,7 +158,7 @@ export function governorBravoFetchers() {
       `
         #### VotingDelay
 
-        * "GovernorBravo <Governor> VotingDelay" - Returns the voting delay of the given governorBravo 
+        * "GovernorBravo <Governor> VotingDelay" - Returns the voting delay of the given governorBravo
         * E.g. "GovernorBravo GovernorBravoScenario VotingDelay"
       `,
       "VotingDelay",

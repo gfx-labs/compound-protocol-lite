@@ -5,8 +5,12 @@ cache
 artifacts
 yarn.lock
 
+# build artifacts
 dist
 *dist
 *.debug
 typechain
 *-history
+
+# user config files
+.eslint*

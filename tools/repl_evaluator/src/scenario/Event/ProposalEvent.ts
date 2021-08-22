@@ -1,11 +1,17 @@
 import { Event } from "../Event";
 import { addAction, describeUser, World } from "../World";
-import { Governor } from "../Contract/Governor";
+import {
+  GovernorAlpha,
+  GovernorBravoDelegate,
+  GovernorBravoDelegator,
+} from "../../../../../typechain";
 import { invoke } from "../Invokation";
 import { getEventV } from "../CoreValue";
 import { EventV } from "../Value";
 import { Arg, Command, processCommandEvent } from "../Command";
 import { getProposalId } from "../Value/ProposalValue";
+
+type Governor = GovernorAlpha | GovernorBravoDelegate | GovernorBravoDelegator;
 
 function getSupport(support: Event): boolean {
   if (typeof support === "string") {
@@ -20,8 +26,8 @@ function getSupport(support: Event): boolean {
 }
 
 async function describeProposal(
-  world: World,
-  governor: Governor,
+  _world: World,
+  _governor: Governor,
   proposalId: number
 ): Promise<string> {
   // const proposal = await from,governor,await governor.populateTransaction.proposals(proposalId).call();
@@ -49,7 +55,7 @@ export function proposalCommands(governor: Governor) {
           world,
           from,
           governor,
-          await governor.populateTransaction.castVote(
+          await governor.populateTransaction["castVote(uint256,bool)"](
             proposalId,
             getSupport(support.val)
           ),
@@ -86,7 +92,7 @@ export function proposalCommands(governor: Governor) {
           world,
           from,
           governor,
-          await governor.populateTransaction.queue(proposalId),
+          await governor.populateTransaction["queue(uint256)"](proposalId),
           "queue"
         );
 
@@ -120,7 +126,7 @@ export function proposalCommands(governor: Governor) {
           world,
           from,
           governor,
-          await governor.populateTransaction.execute(proposalId),
+          await governor.populateTransaction["execute(uint256)"](proposalId),
           "execute"
         );
 
@@ -154,7 +160,7 @@ export function proposalCommands(governor: Governor) {
           world,
           from,
           governor,
-          await governor.populateTransaction.cancel(proposalId),
+          await governor.populateTransaction["cancel(uint256)"](proposalId),
           "cancel"
         );
 

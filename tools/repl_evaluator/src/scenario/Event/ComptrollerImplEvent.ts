@@ -1,7 +1,7 @@
 import { Event } from "../Event";
 import { addAction, describeUser, World } from "../World";
-import { ComptrollerImpl } from "../Contract/ComptrollerImpl";
-import { Unitroller } from "../Contract/Unitroller";
+
+import { Unitroller } from "../../../../../typechain/Unitroller";
 import { invoke } from "../Invokation";
 import {
   getAddressV,
@@ -14,7 +14,10 @@ import {
 } from "../CoreValue";
 import { ArrayV, AddressV, EventV, NumberV, StringV } from "../Value";
 import { Arg, Command, View, processCommandEvent } from "../Command";
-import { buildComptrollerImpl } from "../Builder/ComptrollerImplBuilder";
+import {
+  buildComptrollerImpl,
+  ComptrollerImpl,
+} from "../Builder/ComptrollerImplBuilder";
 import { ComptrollerErrorReporter } from "../ErrorReporter";
 import {
   getComptrollerImpl,
@@ -25,6 +28,37 @@ import { verify } from "../Verify";
 import { mergeContractABI } from "../Networks";
 import { encodedNumber } from "../Encoding";
 import { encodeABI } from "../Utils";
+import {
+  ComptrollerG1S,
+  ComptrollerG2S,
+  ComptrollerG3S,
+  ComptrollerG4S,
+  ComptrollerG5S,
+  ComptrollerG6S,
+  ComptrollerS,
+} from "./ComptrollerEvent";
+
+const isG0 = (o: any): o is ComptrollerS => {
+  return true;
+};
+const isG1 = (o: any): o is ComptrollerG1S => {
+  return true;
+};
+const isG2 = (o: any): o is ComptrollerG2S => {
+  return true;
+};
+const isG3 = (o: any): o is ComptrollerG3S => {
+  return true;
+};
+const isG4 = (o: any): o is ComptrollerG4S => {
+  return true;
+};
+const isG5 = (o: any): o is ComptrollerG5S => {
+  return true;
+};
+const isG6 = (o: any): o is ComptrollerG6S => {
+  return true;
+};
 
 async function genComptrollerImpl(
   world: World,
@@ -40,29 +74,9 @@ async function genComptrollerImpl(
 
   world = addAction(
     world,
-    `Added Comptroller Implementation (${comptrollerImplData.description}) at address ${comptrollerImpl._address}`,
+    `Added Comptroller Implementation (${comptrollerImplData.description}) at address ${comptrollerImpl.address}`,
     comptrollerImplData.invokation
   );
-
-  return world;
-}
-
-async function mergeABI(
-  world: World,
-  from: string,
-  comptrollerImpl: ComptrollerImpl,
-  unitroller: Unitroller
-): Promise<World> {
-  if (!world.dryRun) {
-    // Skip this specifically on dry runs since it's likely to crash due to a number of reasons
-    world = await mergeContractABI(
-      world,
-      "Comptroller",
-      unitroller,
-      unitroller.name,
-      comptrollerImpl.name
-    );
-  }
 
   return world;
 }
@@ -70,7 +84,7 @@ async function mergeABI(
 async function becomeG1(
   world: World,
   from: string,
-  comptrollerImpl: ComptrollerImpl,
+  comptrollerImpl: ComptrollerG1S,
   unitroller: Unitroller,
   priceOracleAddr: string,
   closeFactor: encodedNumber,
@@ -80,8 +94,8 @@ async function becomeG1(
     world,
     from,
     comptrollerImpl,
-    await comptrollerImpl.populateTransaction._become(
-      unitroller._address,
+    await comptrollerImpl._become(
+      unitroller.address,
       priceOracleAddr,
       closeFactor,
       maxAssets,
@@ -96,14 +110,14 @@ async function becomeG1(
       world,
       "Comptroller",
       unitroller,
-      unitroller.name,
-      comptrollerImpl.name
+      unitroller.address,
+      comptrollerImpl.address
     );
   }
 
   world = addAction(
     world,
-    `Become ${unitroller._address}'s Comptroller Impl with priceOracle=${priceOracleAddr},closeFactor=${closeFactor},maxAssets=${maxAssets}`,
+    `Become ${unitroller.address}'s Comptroller Impl with priceOracle=${priceOracleAddr},closeFactor=${closeFactor},maxAssets=${maxAssets}`,
     invokation
   );
 
@@ -114,7 +128,7 @@ async function becomeG1(
 async function recome(
   world: World,
   from: string,
-  comptrollerImpl: ComptrollerImpl,
+  comptrollerImpl: ComptrollerG1S,
   unitroller: Unitroller
 ): Promise<World> {
   let invokation = await invoke(
@@ -122,7 +136,7 @@ async function recome(
     from,
     comptrollerImpl,
     await comptrollerImpl.populateTransaction._become(
-      unitroller._address,
+      unitroller.address,
       "0x0000000000000000000000000000000000000000",
       0,
       0,
@@ -136,13 +150,13 @@ async function recome(
     world,
     "Comptroller",
     unitroller,
-    unitroller.name,
-    comptrollerImpl.name
+    unitroller.address,
+    comptrollerImpl.address
   );
 
   world = addAction(
     world,
-    `Recome ${unitroller._address}'s Comptroller Impl`,
+    `Recome ${unitroller.address}'s Comptroller Impl`,
     invokation
   );
 
@@ -152,14 +166,14 @@ async function recome(
 async function becomeG2(
   world: World,
   from: string,
-  comptrollerImpl: ComptrollerImpl,
+  comptrollerImpl: ComptrollerG2S,
   unitroller: Unitroller
 ): Promise<World> {
   let invokation = await invoke(
     world,
     from,
     comptrollerImpl,
-    await comptrollerImpl.populateTransaction._become(unitroller._address),
+    await comptrollerImpl.populateTransaction._become(unitroller.address),
     "_become",
     ComptrollerErrorReporter
   );
@@ -170,14 +184,14 @@ async function becomeG2(
       world,
       "Comptroller",
       unitroller,
-      unitroller.name,
-      comptrollerImpl.name
+      unitroller.address,
+      comptrollerImpl.address
     );
   }
 
   world = addAction(
     world,
-    `Become ${unitroller._address}'s Comptroller Impl`,
+    `Become ${unitroller.address}'s Comptroller Impl`,
     invokation
   );
 
@@ -187,7 +201,7 @@ async function becomeG2(
 async function becomeG3(
   world: World,
   from: string,
-  comptrollerImpl: ComptrollerImpl,
+  comptrollerImpl: ComptrollerG3S,
   unitroller: Unitroller,
   compRate: encodedNumber,
   compMarkets: string[],
@@ -198,7 +212,7 @@ async function becomeG3(
     from,
     comptrollerImpl,
     await comptrollerImpl.populateTransaction._become(
-      unitroller._address,
+      unitroller.address,
       compRate,
       compMarkets,
       otherMarkets
@@ -213,14 +227,14 @@ async function becomeG3(
       world,
       "Comptroller",
       unitroller,
-      unitroller.name,
-      comptrollerImpl.name
+      unitroller.address,
+      comptrollerImpl.address
     );
   }
 
   world = addAction(
     world,
-    `Become ${unitroller._address}'s Comptroller Impl`,
+    `Become ${unitroller.address}'s Comptroller Impl`,
     invokation
   );
 
@@ -230,14 +244,14 @@ async function becomeG3(
 async function becomeG4(
   world: World,
   from: string,
-  comptrollerImpl: ComptrollerImpl,
+  comptrollerImpl: ComptrollerG4S,
   unitroller: Unitroller
 ): Promise<World> {
   let invokation = await invoke(
     world,
     from,
     comptrollerImpl,
-    await comptrollerImpl.populateTransaction._become(unitroller._address),
+    await comptrollerImpl.populateTransaction._become(unitroller.address),
     "_become",
     ComptrollerErrorReporter
   );
@@ -248,14 +262,14 @@ async function becomeG4(
       world,
       "Comptroller",
       unitroller,
-      unitroller.name,
-      comptrollerImpl.name
+      unitroller.address,
+      comptrollerImpl.address
     );
   }
 
   world = addAction(
     world,
-    `Become ${unitroller._address}'s Comptroller Impl`,
+    `Become ${unitroller.address}'s Comptroller Impl`,
     invokation
   );
 
@@ -265,14 +279,14 @@ async function becomeG4(
 async function becomeG5(
   world: World,
   from: string,
-  comptrollerImpl: ComptrollerImpl,
+  comptrollerImpl: ComptrollerG5S,
   unitroller: Unitroller
 ): Promise<World> {
   let invokation = await invoke(
     world,
     from,
     comptrollerImpl,
-    await comptrollerImpl.populateTransaction._become(unitroller._address),
+    await comptrollerImpl.populateTransaction._become(unitroller.address),
     "_become",
     ComptrollerErrorReporter
   );
@@ -283,14 +297,14 @@ async function becomeG5(
       world,
       "Comptroller",
       unitroller,
-      unitroller.name,
-      comptrollerImpl.name
+      unitroller.address,
+      comptrollerImpl.address
     );
   }
 
   world = addAction(
     world,
-    `Become ${unitroller._address}'s Comptroller Impl`,
+    `Become ${unitroller.address}'s Comptroller Impl`,
     invokation
   );
 
@@ -300,14 +314,14 @@ async function becomeG5(
 async function becomeG6(
   world: World,
   from: string,
-  comptrollerImpl: ComptrollerImpl,
+  comptrollerImpl: ComptrollerG6S,
   unitroller: Unitroller
 ): Promise<World> {
   let invokation = await invoke(
     world,
     from,
     comptrollerImpl,
-    await comptrollerImpl.populateTransaction._become(unitroller._address),
+    await comptrollerImpl.populateTransaction._become(unitroller.address),
     "_become",
     ComptrollerErrorReporter
   );
@@ -318,14 +332,14 @@ async function becomeG6(
       world,
       "Comptroller",
       unitroller,
-      unitroller.name,
-      comptrollerImpl.name
+      unitroller.address,
+      comptrollerImpl.address
     );
   }
 
   world = addAction(
     world,
-    `Become ${unitroller._address}'s Comptroller Impl`,
+    `Become ${unitroller.address}'s Comptroller Impl`,
     invokation
   );
 
@@ -335,14 +349,14 @@ async function becomeG6(
 async function become(
   world: World,
   from: string,
-  comptrollerImpl: ComptrollerImpl,
+  comptrollerImpl: ComptrollerS,
   unitroller: Unitroller
 ): Promise<World> {
   let invokation = await invoke(
     world,
     from,
     comptrollerImpl,
-    await comptrollerImpl.populateTransaction._become(unitroller._address),
+    await comptrollerImpl.populateTransaction._become(unitroller.address),
     "_become",
     ComptrollerErrorReporter
   );
@@ -353,14 +367,14 @@ async function become(
       world,
       "Comptroller",
       unitroller,
-      unitroller.name,
-      comptrollerImpl.name
+      unitroller.address,
+      comptrollerImpl.address
     );
   }
 
   world = addAction(
     world,
-    `Become ${unitroller._address}'s Comptroller Impl`,
+    `Become ${unitroller.address}'s Comptroller Impl`,
     invokation
   );
 
@@ -379,7 +393,7 @@ async function verifyComptrollerImpl(
       `Politely declining to verify on local network: ${world.network}.`
     );
   } else {
-    await verify(world, apiKey, name, contract, comptrollerImpl._address);
+    await verify(world, apiKey, name, contract, comptrollerImpl.address);
   }
 
   return world;
@@ -452,16 +466,20 @@ export function comptrollerImplCommands() {
         world,
         from,
         { unitroller, comptrollerImpl, priceOracle, closeFactor, maxAssets }
-      ) =>
-        becomeG1(
-          world,
-          from,
-          comptrollerImpl,
-          unitroller,
-          priceOracle.val,
-          closeFactor.encode(),
-          maxAssets.encode()
-        ),
+      ) => {
+        if (isG1(comptrollerImpl)) {
+          return becomeG1(
+            world,
+            from,
+            comptrollerImpl,
+            unitroller,
+            priceOracle.val,
+            closeFactor.encode(),
+            maxAssets.encode()
+          );
+        }
+        return Promise.resolve(world);
+      },
       { namePos: 1 }
     ),
 
@@ -480,8 +498,12 @@ export function comptrollerImplCommands() {
         new Arg("unitroller", getUnitroller, { implicit: true }),
         new Arg("comptrollerImpl", getComptrollerImpl),
       ],
-      (world, from, { unitroller, comptrollerImpl }) =>
-        becomeG2(world, from, comptrollerImpl, unitroller),
+      (world, from, { unitroller, comptrollerImpl }) => {
+        if (isG2(comptrollerImpl)) {
+          return becomeG2(world, from, comptrollerImpl, unitroller);
+        }
+        return Promise.resolve(world);
+      },
       { namePos: 1 }
     ),
 
@@ -515,15 +537,18 @@ export function comptrollerImplCommands() {
         from,
         { unitroller, comptrollerImpl, compRate, compMarkets, otherMarkets }
       ) => {
-        return becomeG3(
-          world,
-          from,
-          comptrollerImpl,
-          unitroller,
-          compRate.encode(),
-          compMarkets.val.map((a) => a.val),
-          otherMarkets.val.map((a) => a.val)
-        );
+        if (isG3(comptrollerImpl)) {
+          return becomeG3(
+            world,
+            from,
+            comptrollerImpl,
+            unitroller,
+            compRate.encode(),
+            compMarkets.val.map((a) => a.val),
+            otherMarkets.val.map((a) => a.val)
+          );
+        }
+        return Promise.resolve(world);
       },
       { namePos: 1 }
     ),
@@ -543,7 +568,10 @@ export function comptrollerImplCommands() {
         new Arg("comptrollerImpl", getComptrollerImpl),
       ],
       (world, from, { unitroller, comptrollerImpl }) => {
-        return becomeG4(world, from, comptrollerImpl, unitroller);
+        if (isG4(comptrollerImpl)) {
+          return becomeG4(world, from, comptrollerImpl, unitroller);
+        }
+        return Promise.resolve(world);
       },
       { namePos: 1 }
     ),
@@ -563,7 +591,10 @@ export function comptrollerImplCommands() {
         new Arg("comptrollerImpl", getComptrollerImpl),
       ],
       (world, from, { unitroller, comptrollerImpl }) => {
-        return becomeG5(world, from, comptrollerImpl, unitroller);
+        if (isG5(comptrollerImpl)) {
+          return becomeG5(world, from, comptrollerImpl, unitroller);
+        }
+        return Promise.resolve(world);
       },
       { namePos: 1 }
     ),
@@ -583,7 +614,10 @@ export function comptrollerImplCommands() {
         new Arg("comptrollerImpl", getComptrollerImpl),
       ],
       (world, from, { unitroller, comptrollerImpl }) => {
-        return becomeG6(world, from, comptrollerImpl, unitroller);
+        if (isG6(comptrollerImpl)) {
+          return becomeG6(world, from, comptrollerImpl, unitroller);
+        }
+        return Promise.resolve(world);
       },
       { namePos: 1 }
     ),
@@ -604,7 +638,10 @@ export function comptrollerImplCommands() {
         new Arg("comptrollerImpl", getComptrollerImpl),
       ],
       (world, from, { unitroller, comptrollerImpl }) => {
-        return become(world, from, comptrollerImpl, unitroller);
+        if (isG0(comptrollerImpl)) {
+          return become(world, from, comptrollerImpl, unitroller);
+        }
+        return Promise.resolve(world);
       },
       { namePos: 1 }
     ),
@@ -624,8 +661,9 @@ export function comptrollerImplCommands() {
         new Arg("unitroller", getUnitroller, { implicit: true }),
         new Arg("comptrollerImpl", getComptrollerImpl),
       ],
-      (world, from, { unitroller, comptrollerImpl }) =>
-        mergeABI(world, from, comptrollerImpl, unitroller),
+      (world, _from, { unitroller, comptrollerImpl }) =>
+        // mergeABI(world, from, comptrollerImpl, unitroller),
+        Promise.resolve(world),
       { namePos: 1 }
     ),
     new Command<{ unitroller: Unitroller; comptrollerImpl: ComptrollerImpl }>(
@@ -640,8 +678,12 @@ export function comptrollerImplCommands() {
         new Arg("unitroller", getUnitroller, { implicit: true }),
         new Arg("comptrollerImpl", getComptrollerImpl),
       ],
-      (world, from, { unitroller, comptrollerImpl }) =>
-        recome(world, from, comptrollerImpl, unitroller),
+      (world, from, { unitroller, comptrollerImpl }) => {
+        if (isG1(comptrollerImpl)) {
+          return recome(world, from, comptrollerImpl, unitroller);
+        }
+        return Promise.resolve(world);
+      },
       { namePos: 1 }
     ),
   ];

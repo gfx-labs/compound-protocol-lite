@@ -13,12 +13,14 @@ task("repl", "create a repl").setAction(async (args, hre) => {
 task("scen", "run scenario")
   .addParam("file", "file to evaluate to evaluate")
   .setAction(async (args, hre) => {
-    const child = exec(`npx ts-node scripts/scen.ts --file ${args.file}`);
-    child.stdout.pipe(process.stdout);
-    child.on("exit", () => {
-      process.exit();
+    return new Promise((resolve, reject) => {
+      console.log(args.file);
+      const child = exec(`npx ts-node scripts/scen.ts --file ${args.file}`);
+      child.stdout.pipe(process.stdout);
+      child.stdout.pipe(process.stderr);
+      child.once("close", resolve);
+      child.once("error", reject);
     });
-    await new Promise(function () {});
   });
 
 /**
@@ -48,11 +50,10 @@ export default {
       },
     },
   },
-
   typechain: {
     outDir: "./typechain",
     target: "ethers-v5",
-    alwaysGenerateOverloads: false,
+    alwaysGenerateOverloads: true,
   },
 };
 

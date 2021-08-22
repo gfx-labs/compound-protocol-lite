@@ -17,6 +17,49 @@ function randomAddress(): string {
   return crypto.randomBytes(20).toString("hex");
 }
 
+export async function deploy_contract_world<T>(
+  world: World,
+  from: string,
+  name: string,
+  args: any[]
+): Promise<Invokation<T>> {
+  const artifact = await world.hre.artifacts.readArtifact(name);
+  const signer = await world.hre.ethers.getSigner(from);
+  const factory = await world.hre.ethers.getContractFactory(name, signer);
+  let contract: ethers.Contract;
+  let receipt: ethers.providers.TransactionReceipt;
+  try {
+    if (world.dryRun) {
+      let addr = randomAddress();
+      console.log(`Dry run: Deploying ${name} at fake address ${addr}`);
+      contract = new world.hre.ethers.Contract(addr, artifact.abi, signer);
+    } else {
+      contract = await factory.deploy(...args);
+      receipt = await contract.deployTransaction.wait();
+    }
+    return new Invokation<T>(
+      (<unknown>contract) as T,
+      receipt,
+      null,
+      contract,
+      null,
+      null,
+      null
+    );
+  } catch (err) {
+    console.log("invokation error", err);
+    return new Invokation<T>(
+      null,
+      null,
+      err,
+      null,
+      (factory.getDeployTransaction(args).nonce = null),
+      null,
+      null
+    );
+  }
+}
+
 class ContractStub {
   name: string;
   test: boolean;

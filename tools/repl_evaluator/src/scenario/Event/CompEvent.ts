@@ -1,6 +1,7 @@
 import { Event } from "../Event";
-import { addAction, World, describeUser } from "../World";
-import { Comp, CompScenario } from "../Contract/Comp";
+import { addAction, World } from "../World";
+import { Comp } from "../../../../../typechain/Comp";
+import { CompScenario } from "../../../../../typechain/CompScenario";
 import { buildComp } from "../Builder/CompBuilder";
 import { invoke } from "../Invokation";
 import { getAddressV, getEventV, getNumberV, getStringV } from "../CoreValue";
@@ -9,23 +10,22 @@ import { Arg, Command, processCommandEvent, View } from "../Command";
 import { getComp } from "../ContractLookup";
 import { NoErrorReporter } from "../ErrorReporter";
 import { verify } from "../Verify";
-import { encodedNumber } from "../Encoding";
 
 async function genComp(
   world: World,
   from: string,
   params: Event
 ): Promise<World> {
-  let { world: nextWorld, comp, tokenData } = await buildComp(
-    world,
-    from,
-    params
-  );
+  let {
+    world: nextWorld,
+    comp,
+    tokenData,
+  } = await buildComp(world, from, params);
   world = nextWorld;
 
   world = addAction(
     world,
-    `Deployed Comp (${comp.name}) to address ${comp._address}`,
+    `Deployed Comp (${comp.name}) to address ${comp.address}`,
     tokenData.invokation
   );
 
@@ -44,7 +44,7 @@ async function verifyComp(
       `Politely declining to verify on local network: ${world.network}.`
     );
   } else {
-    await verify(world, apiKey, modelName, contractName, comp._address);
+    await verify(world, apiKey, modelName, contractName, comp.address);
   }
 
   return world;
@@ -220,7 +220,8 @@ async function setBlockNumber(
       world,
       from,
       comp,
-      await comp.populateTransaction.setBlockNumber(blockNumber.encode()),
+      null,
+      //  await .setBlockNumber(blockNumber.encode()), /* disabled for now as hardhat adds
       "setBlockNumber"
     )
   );
@@ -258,7 +259,7 @@ export function compCommands() {
           world,
           comp,
           apiKey.val,
-          comp.name,
+          comp.address,
           contractName.val
         );
       }

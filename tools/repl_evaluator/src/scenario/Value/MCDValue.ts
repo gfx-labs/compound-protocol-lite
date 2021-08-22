@@ -1,24 +1,19 @@
-import { Event } from '../Event';
-import { World } from '../World';
-import { getContract } from '../Contract';
-import { Pot } from '../Contract/Pot';
-import { Vat } from '../Contract/Vat';
-import {
-  getAddressV,
-  getCoreValue,
-  getStringV
-} from '../CoreValue';
-import { Arg, Fetcher, getFetcherValue } from '../Command';
-import {
-  AddressV,
-  NumberV,
-  Value,
-  StringV
-} from '../Value';
+import { Event } from "../Event";
+import { World } from "../World";
+import { getContract } from "../Contract";
+import { PotLike as Pot } from "../../../../../typechain/PotLike";
+import { VatLike as Vat } from "../../../../../typechain/VatLike";
+import { getAddressV, getCoreValue, getStringV } from "../CoreValue";
+import { Arg, Fetcher, getFetcherValue } from "../Command";
+import { AddressV, NumberV, Value, StringV } from "../Value";
 
 export function mcdFetchers() {
   return [
-    new Fetcher<{ potAddress: AddressV, method: StringV, args: StringV[] }, Value>(`
+    new Fetcher<
+      { potAddress: AddressV; method: StringV; args: StringV[] },
+      Value
+    >(
+      `
         #### PotAt
 
         * "MCD PotAt <potAddress> <method> <args>"
@@ -28,17 +23,21 @@ export function mcdFetchers() {
       [
         new Arg("potAddress", getAddressV),
         new Arg("method", getStringV),
-        new Arg('args', getCoreValue, { variadic: true, mapped: true })
+        new Arg("args", getCoreValue, { variadic: true, mapped: true }),
       ],
       async (world, { potAddress, method, args }) => {
-        const PotContract = getContract('PotLike');
+        const PotContract = getContract("PotLike");
         const pot = await PotContract.at<Pot>(world, potAddress.val);
-        const argStrings = args.map(arg => arg.val);
-        return new NumberV(await pot.methods[method.val](...argStrings).call())
+        const argStrings = args.map((arg) => arg.val);
+        return new NumberV(await pot.callStatic[method.val](...argStrings));
       }
     ),
 
-    new Fetcher<{ vatAddress: AddressV, method: StringV, args: StringV[] }, Value>(`
+    new Fetcher<
+      { vatAddress: AddressV; method: StringV; args: StringV[] },
+      Value
+    >(
+      `
         #### VatAt
 
         * "MCD VatAt <vatAddress> <method> <args>"
@@ -48,15 +47,15 @@ export function mcdFetchers() {
       [
         new Arg("vatAddress", getAddressV),
         new Arg("method", getStringV),
-        new Arg('args', getCoreValue, { variadic: true, mapped: true })
+        new Arg("args", getCoreValue, { variadic: true, mapped: true }),
       ],
       async (world, { vatAddress, method, args }) => {
-        const VatContract = getContract('VatLike');
+        const VatContract = getContract("VatLike");
         const vat = await VatContract.at<Vat>(world, vatAddress.val);
-        const argStrings = args.map(arg => arg.val);
-        return new NumberV(await vat.methods[method.val](...argStrings).call())
+        const argStrings = args.map((arg) => arg.val);
+        return new NumberV(await vat.callStatic[method.val](...argStrings));
       }
-    )
+    ),
   ];
 }
 

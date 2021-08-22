@@ -1,8 +1,8 @@
 import { Event } from "../Event";
 import { addAction, describeUser, World } from "../World";
 import { decodeCall, getPastEvents } from "../Contract";
-import { CToken, CTokenScenario } from "../Contract/CToken";
-import { CErc20Delegate } from "../Contract/CErc20Delegate";
+import { CToken, CTokenScenario } from "../../../../../typechain";
+import { CErc20Delegate } from "../../../../../typechain/CErc20Delegate";
 import { invoke, Sendable } from "../Invokation";
 import {
   getAddressV,
@@ -49,7 +49,7 @@ async function verifyCTokenDelegate(
       `Politely declining to verify on local network: ${world.network}.`
     );
   } else {
-    await verify(world, apiKey, name, contract, cTokenDelegate._address);
+    await verify(world, apiKey, name, contract, cTokenDelegate.address);
   }
 
   return world;

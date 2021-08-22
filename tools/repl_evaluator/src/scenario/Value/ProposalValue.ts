@@ -1,6 +1,14 @@
 import { Event } from "../Event";
 import { World } from "../World";
-import { Governor, proposalStateEnums } from "../Contract/Governor";
+import {
+  GovernorBravoDelegate,
+  GovernorBravoDelegator,
+  GovernorAlpha,
+  GovernorBravoDelegate__factory,
+} from "../../../../../typechain";
+
+type Governor = GovernorBravoDelegate | GovernorBravoDelegator | GovernorAlpha;
+import { proposalStateEnums } from "./BravoProposalValue";
 import { getAddress } from "../ContractLookup";
 import {
   getAddressV,
@@ -12,15 +20,18 @@ import {
 import { AddressV, BoolV, EventV, NumberV, StringV, Value } from "../Value";
 import { Arg, Fetcher, getFetcherValue } from "../Command";
 import { encodedNumber } from "../Encoding";
-import { BigNumber } from "ethers";
 
 export async function getProposalId(
   world: World,
   governor: Governor,
   proposalIdent: Event
 ): Promise<number> {
+  const governorInterface = GovernorBravoDelegate__factory.connect(
+    governor.address,
+    world.hre.ethers.provider
+  );
   if (typeof proposalIdent === "string" && proposalIdent === "LastProposal") {
-    const proposalcount = await governor.callStatic.proposalCount();
+    const proposalcount = await governorInterface.callStatic.proposalCount();
     return proposalcount.toNumber();
   } else if (
     Array.isArray(proposalIdent) &&
@@ -29,7 +40,7 @@ export async function getProposalId(
   ) {
     let proposer = getAddress(world, proposalIdent[1]);
 
-    return (await governor.latestProposalIds(proposer)).toNumber();
+    return (await governorInterface.latestProposalIds(proposer)).toNumber();
   } else {
     try {
       return (await getNumberV(world, proposalIdent)).toNumber();
@@ -58,8 +69,11 @@ async function getProposalState(
   governor: Governor,
   proposalIdent: Event
 ): Promise<StringV> {
+  const governorInterface = new GovernorBravoDelegate__factory().attach(
+    governor.address
+  );
   const proposalId = await getProposalId(world, governor, proposalIdent);
-  const stateEnum = await governor.methods.state(proposalId).call();
+  const stateEnum = await governorInterface.callStatic.state(proposalId);
   return new StringV(proposalStateEnums[stateEnum]);
 }
 
@@ -75,22 +89,22 @@ export function proposalFetchers(governor: Governor) {
     targets: {
       constructor: getArrayV(getStringV),
       getter: async (governor, proposalId) =>
-        (await governor.methods.getActions(proposalId).call())[0],
+        (await governor.callStatic.getActions(proposalId))[0],
     },
     values: {
       constructor: getArrayV(getNumberV),
       getter: async (governor, proposalId) =>
-        (await governor.methods.getActions(proposalId).call())[1],
+        (await governor.callStatic.getActions(proposalId))[1],
     },
     signatures: {
       constructor: getArrayV(getStringV),
       getter: async (governor, proposalId) =>
-        (await governor.methods.getActions(proposalId).call())[2],
+        (await governor.callStatic.getActions(proposalId))[2],
     },
     calldatas: {
       constructor: getArrayV(getStringV),
       getter: async (governor, proposalId) =>
-        (await governor.methods.getActions(proposalId).call())[3],
+        (await governor.callStatic.getActions(proposalId))[3],
     },
     startBlock: getNumberV,
     endBlock: getNumberV,
@@ -113,7 +127,7 @@ export function proposalFetchers(governor: Governor) {
       field: field,
       event: capitalize(field.toString()),
       getter: async (governor, proposalId) =>
-        (await governor.methods.proposals(proposalId).call())[field],
+        (await governor.callStatic.proposals(proposalId))[field],
       constructor: values,
       name: field.toString(),
       ...givenValues,
@@ -156,12 +170,13 @@ export function proposalFetchers(governor: Governor) {
       "HasVoted",
       [new Arg("proposalIdent", getEventV), new Arg("voter", getAddressV)],
       async (world, { proposalIdent, voter }) => {
-        const receipt = await governor.methods
-          .getReceipt(
-            await getProposalId(world, governor, proposalIdent.val),
-            voter.val
-          )
-          .call();
+        const governorInterface = new GovernorBravoDelegate__factory().attach(
+          governor.address
+        );
+        const receipt = await governorInterface.callStatic.getReceipt(
+          await getProposalId(world, governor, proposalIdent.val),
+          voter.val
+        );
         return new BoolV(receipt.hasVoted);
       },
       { namePos: 1 }
@@ -177,12 +192,13 @@ export function proposalFetchers(governor: Governor) {
       "Supported",
       [new Arg("proposalIdent", getEventV), new Arg("voter", getAddressV)],
       async (world, { proposalIdent, voter }) => {
-        const receipt = await governor.methods
-          .getReceipt(
-            await getProposalId(world, governor, proposalIdent.val),
-            voter.val
-          )
-          .call();
+        const governorInterface = new GovernorBravoDelegate__factory().attach(
+          governor.address
+        );
+        const receipt = await governorInterface.callStatic.getReceipt(
+          await getProposalId(world, governor, proposalIdent.val),
+          voter.val
+        );
         return new BoolV(receipt.support);
       },
       { namePos: 1 }
@@ -198,12 +214,13 @@ export function proposalFetchers(governor: Governor) {
       "VotesCast",
       [new Arg("proposalIdent", getEventV), new Arg("voter", getAddressV)],
       async (world, { proposalIdent, voter }) => {
-        const receipt = await governor.methods
-          .getReceipt(
-            await getProposalId(world, governor, proposalIdent.val),
-            voter.val
-          )
-          .call();
+        const governorInterface = new GovernorBravoDelegate__factory().attach(
+          governor.address
+        );
+        const receipt = await governorInterface.callStatic.getReceipt(
+          await getProposalId(world, governor, proposalIdent.val),
+          voter.val
+        );
         return new NumberV(receipt.votes);
       },
       { namePos: 1 }

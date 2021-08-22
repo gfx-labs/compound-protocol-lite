@@ -1,7 +1,6 @@
 import { Event } from "../Event";
 import { World } from "../World";
-import { Comptroller } from "../Contract/Comptroller";
-import { CToken } from "../Contract/CToken";
+import { CToken } from "../../../../../typechain/CToken";
 import {
   getAddressV,
   getCoreValue,
@@ -13,25 +12,29 @@ import { Arg, Fetcher, getFetcherValue } from "../Command";
 import { getComptroller } from "../ContractLookup";
 import { encodedNumber } from "../Encoding";
 import { getCTokenV } from "../Value/CTokenValue";
-import { encodeParameters, encodeABI } from "../Utils";
+import { encodeABI } from "../Utils";
+import { ComptrollerImpl } from "../Builder/ComptrollerImplBuilder";
+import { ComptrollerImplS } from "../Event/ComptrollerEvent";
+
+type Comptroller = ComptrollerImplS;
 
 export async function getComptrollerAddress(
-  world: World,
+  _world: World,
   comptroller: Comptroller
 ): Promise<AddressV> {
-  return new AddressV(comptroller._address);
+  return new AddressV(comptroller.address);
 }
 
 export async function getLiquidity(
-  world: World,
-  comptroller: Comptroller,
+  _world: World,
+  comptroller: ComptrollerImpl,
   user: string
 ): Promise<NumberV> {
   let {
     0: error,
     1: liquidity,
     2: shortfall,
-  } = await comptroller.methods.getAccountLiquidity(user).call();
+  } = await comptroller.callStatic.getAccountLiquidity(user);
   if (Number(error) != 0) {
     throw new Error(
       `Failed to compute account liquidity: error code = ${error}`
@@ -41,7 +44,7 @@ export async function getLiquidity(
 }
 
 export async function getHypotheticalLiquidity(
-  world: World,
+  _world: World,
   comptroller: Comptroller,
   account: string,
   asset: string,
@@ -52,9 +55,9 @@ export async function getHypotheticalLiquidity(
     0: error,
     1: liquidity,
     2: shortfall,
-  } = await comptroller.methods
-    .getHypotheticalAccountLiquidity(account, asset, redeemTokens, borrowAmount)
-    .call();
+  } = await comptroller.callStatic[
+    "getHypotheticalAccountLiquidity(address,address,uint256,uint256)"
+  ](account, asset, redeemTokens, borrowAmount);
   if (Number(error) != 0) {
     throw new Error(
       `Failed to compute account hypothetical liquidity: error code = ${error}`
@@ -64,142 +67,135 @@ export async function getHypotheticalLiquidity(
 }
 
 async function getPriceOracle(
-  world: World,
+  _world: World,
   comptroller: Comptroller
 ): Promise<AddressV> {
-  return new AddressV(await comptroller.methods.oracle().call());
+  return new AddressV(await comptroller.callStatic.oracle());
 }
 
 async function getCloseFactor(
-  world: World,
+  _world: World,
   comptroller: Comptroller
 ): Promise<NumberV> {
-  return new NumberV(
-    await comptroller.methods.closeFactorMantissa().call(),
-    1e18
-  );
+  return new NumberV(await comptroller.callStatic.closeFactorMantissa(), 1e18);
 }
 
 async function getMaxAssets(
-  world: World,
+  _world: World,
   comptroller: Comptroller
 ): Promise<NumberV> {
-  return new NumberV(await comptroller.methods.maxAssets().call());
+  return new NumberV(await comptroller.callStatic.maxAssets());
 }
 
 async function getLiquidationIncentive(
-  world: World,
+  _world: World,
   comptroller: Comptroller
 ): Promise<NumberV> {
   return new NumberV(
-    await comptroller.methods.liquidationIncentiveMantissa().call(),
+    await comptroller.callStatic.liquidationIncentiveMantissa(),
     1e18
   );
 }
 
 async function getImplementation(
-  world: World,
+  _world: World,
   comptroller: Comptroller
 ): Promise<AddressV> {
-  return new AddressV(
-    await comptroller.methods.comptrollerImplementation().call()
-  );
+  return new AddressV(await comptroller.callStatic.comptrollerImplementation());
 }
 
 async function getBlockNumber(
-  world: World,
+  _world: World,
   comptroller: Comptroller
 ): Promise<NumberV> {
-  return new NumberV(await comptroller.methods.getBlockNumber().call());
+  return new NumberV(await comptroller.provider.getBlockNumber());
 }
 
 async function getAdmin(
-  world: World,
+  _world: World,
   comptroller: Comptroller
 ): Promise<AddressV> {
-  return new AddressV(await comptroller.methods.admin().call());
+  return new AddressV(await comptroller.callStatic.admin());
 }
 
 async function getPendingAdmin(
-  world: World,
+  _world: World,
   comptroller: Comptroller
 ): Promise<AddressV> {
-  return new AddressV(await comptroller.methods.pendingAdmin().call());
+  return new AddressV(await comptroller.callStatic.pendingAdmin());
 }
 
 async function getCollateralFactor(
-  world: World,
+  _world: World,
   comptroller: Comptroller,
   cToken: CToken
 ): Promise<NumberV> {
-  let {
-    0: _isListed,
-    1: collateralFactorMantissa,
-  } = await comptroller.methods.markets(cToken._address).call();
+  let { 0: _isListed, 1: collateralFactorMantissa } =
+    await comptroller.callStatic.markets(cToken.address);
   return new NumberV(collateralFactorMantissa, 1e18);
 }
 
 async function membershipLength(
-  world: World,
+  _world: World,
   comptroller: Comptroller,
   user: string
 ): Promise<NumberV> {
-  return new NumberV(await comptroller.methods.membershipLength(user).call());
+  return new NumberV(
+    await comptroller.callStatic["membershipLength(address)"](user)
+  );
 }
 
 async function checkMembership(
-  world: World,
+  _world: World,
   comptroller: Comptroller,
   user: string,
   cToken: CToken
 ): Promise<BoolV> {
   return new BoolV(
-    await comptroller.methods.checkMembership(user, cToken._address).call()
+    await comptroller.callStatic.checkMembership(user, cToken.address)
   );
 }
 
 async function getAssetsIn(
-  world: World,
+  _world: World,
   comptroller: Comptroller,
   user: string
 ): Promise<ListV> {
-  let assetsList = await comptroller.methods.getAssetsIn(user).call();
+  let assetsList = await comptroller.callStatic.getAssetsIn(user);
 
   return new ListV(assetsList.map((a) => new AddressV(a)));
 }
 
 async function getCompMarkets(
-  world: World,
+  _world: World,
   comptroller: Comptroller
 ): Promise<ListV> {
-  let mkts = await comptroller.methods.getCompMarkets().call();
+  let mkts = await comptroller.callStatic["getCompMarkets()"]();
 
-  return new ListV(mkts.map((a) => new AddressV(a)));
+  return new ListV(mkts.map((a: any) => new AddressV(a)));
 }
 
 async function checkListed(
-  world: World,
+  _world: World,
   comptroller: Comptroller,
   cToken: CToken
 ): Promise<BoolV> {
-  let {
-    0: isListed,
-    1: _collateralFactorMantissa,
-  } = await comptroller.methods.markets(cToken._address).call();
+  let { 0: isListed, 1: _collateralFactorMantissa } =
+    await comptroller.callStatic.markets(cToken.address);
 
   return new BoolV(isListed);
 }
 
 async function checkIsComped(
-  world: World,
+  _world: World,
   comptroller: Comptroller,
   cToken: CToken
 ): Promise<BoolV> {
   let {
-    0: isListed,
+    0: _isListed,
     1: _collateralFactorMantissa,
     2: isComped,
-  } = await comptroller.methods.markets(cToken._address).call();
+  } = await comptroller.callStatic.markets(cToken.address);
   return new BoolV(isComped);
 }
 
@@ -276,7 +272,7 @@ export function comptrollerFetchers() {
           world,
           comptroller,
           account.val,
-          cToken._address,
+          cToken.address,
           redeemTokens.encode(),
           borrowAmount.encode()
         );
@@ -473,8 +469,9 @@ export function comptrollerFetchers() {
         `,
       "PauseGuardian",
       [new Arg("comptroller", getComptroller, { implicit: true })],
-      async (world, { comptroller }) =>
-        new AddressV(await comptroller.methods.pauseGuardian().call())
+      async (_world, { comptroller }) => {
+        return new AddressV(await comptroller.callStatic["pauseGuardian()"]());
+      }
     ),
 
     new Fetcher<{ comptroller: Comptroller }, BoolV>(
@@ -486,8 +483,8 @@ export function comptrollerFetchers() {
         `,
       "_MintGuardianPaused",
       [new Arg("comptroller", getComptroller, { implicit: true })],
-      async (world, { comptroller }) =>
-        new BoolV(await comptroller.methods._mintGuardianPaused().call())
+      async (_world, { comptroller }) =>
+        new BoolV(await comptroller.callStatic["_mintGuardianPaused()"]())
     ),
     new Fetcher<{ comptroller: Comptroller }, BoolV>(
       `
@@ -498,8 +495,8 @@ export function comptrollerFetchers() {
         `,
       "_BorrowGuardianPaused",
       [new Arg("comptroller", getComptroller, { implicit: true })],
-      async (world, { comptroller }) =>
-        new BoolV(await comptroller.methods._borrowGuardianPaused().call())
+      async (_world, { comptroller }) =>
+        new BoolV(await comptroller.callStatic["_borrowGuardianPaused()"]())
     ),
 
     new Fetcher<{ comptroller: Comptroller }, BoolV>(
@@ -511,8 +508,8 @@ export function comptrollerFetchers() {
         `,
       "TransferGuardianPaused",
       [new Arg("comptroller", getComptroller, { implicit: true })],
-      async (world, { comptroller }) =>
-        new BoolV(await comptroller.methods.transferGuardianPaused().call())
+      async (_world, { comptroller }) =>
+        new BoolV(await comptroller.callStatic["transferGuardianPaused()"]())
     ),
     new Fetcher<{ comptroller: Comptroller }, BoolV>(
       `
@@ -523,8 +520,8 @@ export function comptrollerFetchers() {
         `,
       "SeizeGuardianPaused",
       [new Arg("comptroller", getComptroller, { implicit: true })],
-      async (world, { comptroller }) =>
-        new BoolV(await comptroller.methods.seizeGuardianPaused().call())
+      async (_world, { comptroller }) =>
+        new BoolV(await comptroller.callStatic["seizeGuardianPaused()"]())
     ),
 
     new Fetcher<{ comptroller: Comptroller; cToken: CToken }, BoolV>(
@@ -539,9 +536,11 @@ export function comptrollerFetchers() {
         new Arg("comptroller", getComptroller, { implicit: true }),
         new Arg("cToken", getCTokenV),
       ],
-      async (world, { comptroller, cToken }) =>
+      async (_world, { comptroller, cToken }) =>
         new BoolV(
-          await comptroller.methods.mintGuardianPaused(cToken._address).call()
+          await comptroller.callStatic["mintGuardianPaused(address)"](
+            cToken.address
+          )
         )
     ),
     new Fetcher<{ comptroller: Comptroller; cToken: CToken }, BoolV>(
@@ -556,9 +555,11 @@ export function comptrollerFetchers() {
         new Arg("comptroller", getComptroller, { implicit: true }),
         new Arg("cToken", getCTokenV),
       ],
-      async (world, { comptroller, cToken }) =>
+      async (_world, { comptroller, cToken }) =>
         new BoolV(
-          await comptroller.methods.borrowGuardianPaused(cToken._address).call()
+          await comptroller.callStatic["borrowGuardianPaused(address)"](
+            cToken.address
+          )
         )
     ),
 
@@ -583,8 +584,8 @@ export function comptrollerFetchers() {
       `,
       "CompRate",
       [new Arg("comptroller", getComptroller, { implicit: true })],
-      async (world, { comptroller }) =>
-        new NumberV(await comptroller.methods.compRate().call())
+      async (_world, { comptroller }) =>
+        new NumberV(await comptroller.callStatic["compRate()"])
     ),
 
     new Fetcher<
@@ -610,7 +611,7 @@ export function comptrollerFetchers() {
           callArgs.map((a) => a.val)
         );
         const res = await world.hre.ethers.provider.call({
-          to: comptroller._address,
+          to: comptroller.address,
           data: fnData,
         });
         const resNum: any = world.hre.ethers.utils.defaultAbiCoder.decode(
@@ -635,10 +636,10 @@ export function comptrollerFetchers() {
         new Arg("CToken", getCTokenV),
         new Arg("key", getStringV),
       ],
-      async (world, { comptroller, CToken, key }) => {
-        const result = await comptroller.methods
-          .compSupplyState(CToken._address)
-          .call();
+      async (_world, { comptroller, CToken, key }) => {
+        const result = await comptroller.callStatic["compSupplyState(address)"](
+          CToken.address
+        );
         return new NumberV(result[key.val]);
       }
     ),
@@ -657,10 +658,10 @@ export function comptrollerFetchers() {
         new Arg("CToken", getCTokenV),
         new Arg("key", getStringV),
       ],
-      async (world, { comptroller, CToken, key }) => {
-        const result = await comptroller.methods
-          .compBorrowState(CToken._address)
-          .call();
+      async (_world, { comptroller, CToken, key }) => {
+        const result = await comptroller.callStatic["compBorrowState(address)"](
+          CToken.address
+        );
         return new NumberV(result[key.val]);
       }
     ),
@@ -678,10 +679,10 @@ export function comptrollerFetchers() {
         new Arg("comptroller", getComptroller, { implicit: true }),
         new Arg("account", getAddressV),
       ],
-      async (world, { comptroller, account }) => {
-        const result = await comptroller.methods
-          .compAccrued(account.val)
-          .call();
+      async (_world, { comptroller, account }) => {
+        const result = await comptroller.callStatic["compAccrued(address)"](
+          account.val
+        );
         return new NumberV(result);
       }
     ),
@@ -700,11 +701,12 @@ export function comptrollerFetchers() {
         new Arg("CToken", getCTokenV),
         new Arg("account", getAddressV),
       ],
-      async (world, { comptroller, CToken, account }) => {
+      async (_world, { comptroller, CToken, account }) => {
         return new NumberV(
-          await comptroller.methods
-            .compSupplierIndex(CToken._address, account.val)
-            .call()
+          await comptroller.callStatic["compSupplierIndex(address, address)"](
+            CToken.address,
+            account.val
+          )
         );
       }
     ),
@@ -723,11 +725,12 @@ export function comptrollerFetchers() {
         new Arg("CToken", getCTokenV),
         new Arg("account", getAddressV),
       ],
-      async (world, { comptroller, CToken, account }) => {
+      async (_world, { comptroller, CToken, account }) => {
         return new NumberV(
-          await comptroller.methods
-            .compBorrowerIndex(CToken._address, account.val)
-            .call()
+          await comptroller.callStatic["compBorrowerIndex(address,address)"](
+            CToken.address,
+            account.val
+          )
         );
       }
     ),
@@ -742,9 +745,9 @@ export function comptrollerFetchers() {
         new Arg("comptroller", getComptroller, { implicit: true }),
         new Arg("CToken", getCTokenV),
       ],
-      async (world, { comptroller, CToken }) => {
+      async (_world, { comptroller, CToken }) => {
         return new NumberV(
-          await comptroller.methods.compSpeeds(CToken._address).call()
+          await comptroller.callStatic["compSpeeds(address)"](CToken.address)
         );
       }
     ),
@@ -757,8 +760,8 @@ export function comptrollerFetchers() {
         `,
       "BorrowCapGuardian",
       [new Arg("comptroller", getComptroller, { implicit: true })],
-      async (world, { comptroller }) =>
-        new AddressV(await comptroller.methods.borrowCapGuardian().call())
+      async (_world, { comptroller }) =>
+        new AddressV(await comptroller.callStatic["borrowCapGuardian()"]())
     ),
     new Fetcher<{ comptroller: Comptroller; CToken: CToken }, NumberV>(
       `
@@ -771,9 +774,9 @@ export function comptrollerFetchers() {
         new Arg("comptroller", getComptroller, { implicit: true }),
         new Arg("CToken", getCTokenV),
       ],
-      async (world, { comptroller, CToken }) => {
+      async (_world, { comptroller, CToken }) => {
         return new NumberV(
-          await comptroller.methods.borrowCaps(CToken._address).call()
+          await comptroller.callStatic["borrowCaps(address)"](CToken.address)
         );
       }
     ),
@@ -788,9 +791,11 @@ export function comptrollerFetchers() {
         new Arg("comptroller", getComptroller, { implicit: true }),
         new Arg("CToken", getCTokenV),
       ],
-      async (world, { comptroller, CToken }) => {
+      async (_world, { comptroller, CToken }) => {
         return new NumberV(
-          await comptroller.methods.isDeprecated(CToken._address).call()
+          +(await comptroller.callStatic["isDeprecated(address)"](
+            CToken.address
+          ))
         );
       }
     ),

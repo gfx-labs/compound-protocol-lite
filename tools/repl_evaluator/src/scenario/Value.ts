@@ -1,6 +1,7 @@
 import { World } from "./World";
 import { Event } from "./Event";
 import BigNumber from "bignumber.js";
+import { ethers } from "ethers";
 import { toEncodableNum } from "./Encoding";
 import { formatEvent } from "./Formatter";
 
@@ -259,22 +260,25 @@ export class AddressV implements Value {
 }
 
 export class NumberV implements Value {
-  val: number | string;
+  val: string;
 
-  constructor(val: number | string, denom?: number | undefined) {
+  constructor(
+    val: number | string | ethers.BigNumber,
+    denom?: number | undefined
+  ) {
     if (denom) {
-      this.val = Number(val) / denom;
+      this.val = (Number(val) / denom).toString();
     } else {
-      this.val = val;
+      this.val = val.toString();
     }
   }
 
   toNumber(): number {
-    return Number(this.val);
+    return Number(parseFloat(this.val));
   }
 
   encode() {
-    return toEncodableNum(this.val);
+    return ethers.BigNumber.from(this.val);
   }
 
   compareTo(world: World, given: Value): boolean {
@@ -310,9 +314,9 @@ export class NumberV implements Value {
   }
 
   toBoolV(): BoolV {
-    if (this.val === 0) {
+    if (parseInt(this.val) === 0) {
       return new BoolV(true);
-    } else if (this.val === 1) {
+    } else if (parseInt(this.val) === 1) {
       return new BoolV(false);
     }
 
@@ -332,7 +336,7 @@ export class NumberV implements Value {
   }
 
   truthy() {
-    return this.val != 0;
+    return parseFloat(this.val) != 0;
   }
 
   add(b: NumberV): NumberV {

@@ -1,23 +1,17 @@
 import { Event } from "../Event";
 import { World } from "../World";
-import {
-  CErc20Delegate,
-  CErc20DelegateScenario,
-} from "../Contract/CErc20Delegate";
-import { CToken } from "../Contract/CToken";
 import { Invokation } from "../Invokation";
 import { getStringV } from "../CoreValue";
 import { AddressV, NumberV, StringV } from "../Value";
 import { Arg, Fetcher, getFetcherValue } from "../Command";
 import { storeAndSaveContract } from "../Networks";
-import { getContract, getTestContract } from "../Contract";
-
-const CDaiDelegateContract = getContract("CDaiDelegate");
-const CDaiDelegateScenarioContract = getTestContract("CDaiDelegateScenario");
-const CErc20DelegateContract = getContract("CErc20Delegate");
-const CErc20DelegateScenarioContract = getTestContract(
-  "CErc20DelegateScenario"
-);
+import { deploy_contract_world } from "../Contract";
+import {
+  CDaiDelegate,
+  CDaiDelegateScenario,
+  CErc20Delegate,
+  CErc20DelegateScenario,
+} from "../../../../../typechain";
 
 export interface CTokenDelegateData {
   invokation: Invokation<CErc20Delegate>;
@@ -47,9 +41,10 @@ export async function buildCTokenDelegate(
       [new Arg("name", getStringV)],
       async (world, { name }) => {
         return {
-          invokation: await CDaiDelegateContract.deploy<CErc20Delegate>(
+          invokation: await deploy_contract_world<CDaiDelegate>(
             world,
             from,
+            "CDaiDelegate",
             []
           ),
           name: name.val,
@@ -70,12 +65,12 @@ export async function buildCTokenDelegate(
       [new Arg("name", getStringV)],
       async (world, { name }) => {
         return {
-          invokation:
-            await CDaiDelegateScenarioContract.deploy<CErc20DelegateScenario>(
-              world,
-              from,
-              []
-            ),
+          invokation: await deploy_contract_world<CDaiDelegateScenario>(
+            world,
+            from,
+            "CDaiDelegateScenario",
+            []
+          ),
           name: name.val,
           contract: "CDaiDelegateScenario",
           description: "Scenario CDai Delegate",
@@ -94,9 +89,10 @@ export async function buildCTokenDelegate(
       [new Arg("name", getStringV)],
       async (world, { name }) => {
         return {
-          invokation: await CErc20DelegateContract.deploy<CErc20Delegate>(
+          invokation: await deploy_contract_world<CErc20Delegate>(
             world,
             from,
+            "CErc20Delegate",
             []
           ),
           name: name.val,
@@ -117,12 +113,12 @@ export async function buildCTokenDelegate(
       [new Arg("name", getStringV)],
       async (world, { name }) => {
         return {
-          invokation:
-            await CErc20DelegateScenarioContract.deploy<CErc20DelegateScenario>(
-              world,
-              from,
-              []
-            ),
+          invokation: await deploy_contract_world<CErc20DelegateScenario>(
+            world,
+            from,
+            "CErc20DelegateScenario",
+            []
+          ),
           name: name.val,
           contract: "CErc20DelegateScenario",
           description: "Scenario CErc20 Delegate",
@@ -155,7 +151,7 @@ export async function buildCTokenDelegate(
       {
         index: ["CTokenDelegate", delegateData.name],
         data: {
-          address: cTokenDelegate._address,
+          address: cTokenDelegate.address,
           contract: delegateData.contract,
           description: delegateData.description,
         },

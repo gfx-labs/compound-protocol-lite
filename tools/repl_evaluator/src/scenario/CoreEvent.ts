@@ -80,10 +80,7 @@ import { printHelp } from "./Help";
 import { loadContracts } from "./Networks";
 import { fork } from "./Hypothetical";
 import { buildContractEvent } from "./EventBuilder";
-import { Counter } from "./Contract/Counter";
-import { CompoundLens } from "./Contract/CompoundLens";
-import { Reservoir } from "./Contract/Reservoir";
-import Web3 from "web3";
+import { Counter, CompoundLens, Reservoir } from "../../../../typechain";
 
 export class EventProcessingError extends Error {
   error: Error;

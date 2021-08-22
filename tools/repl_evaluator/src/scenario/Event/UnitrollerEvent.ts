@@ -1,7 +1,6 @@
 import { Event } from "../Event";
 import { addAction, describeUser, World } from "../World";
-import { Unitroller } from "../Contract/Unitroller";
-import { ComptrollerImpl } from "../Contract/ComptrollerImpl";
+import { Unitroller } from "../../../../../typechain/Unitroller";
 import { invoke } from "../Invokation";
 import { getEventV, getStringV, getAddressV } from "../CoreValue";
 import { EventV, StringV, AddressV } from "../Value";
@@ -10,22 +9,23 @@ import { ComptrollerErrorReporter } from "../ErrorReporter";
 import { buildUnitroller } from "../Builder/UnitrollerBuilder";
 import { getComptrollerImpl, getUnitroller } from "../ContractLookup";
 import { verify } from "../Verify";
+import { ComptrollerImplS } from "./ComptrollerEvent";
 
 async function genUnitroller(
   world: World,
   from: string,
   params: Event
 ): Promise<World> {
-  let { world: nextWorld, unitroller, unitrollerData } = await buildUnitroller(
-    world,
-    from,
-    params
-  );
+  let {
+    world: nextWorld,
+    unitroller,
+    unitrollerData,
+  } = await buildUnitroller(world, from, params);
   world = nextWorld;
 
   world = addAction(
     world,
-    `Added Unitroller (${unitrollerData.description}) at address ${unitroller._address}`,
+    `Added Unitroller (${unitrollerData.description}) at address ${unitroller.address}`,
     unitrollerData.invokation
   );
 
@@ -42,13 +42,7 @@ async function verifyUnitroller(
       `Politely declining to verify on local network: ${world.network}.`
     );
   } else {
-    await verify(
-      world,
-      apiKey,
-      "Unitroller",
-      "Unitroller",
-      unitroller._address
-    );
+    await verify(world, apiKey, "Unitroller", "Unitroller", unitroller.address);
   }
 
   return world;
@@ -97,14 +91,14 @@ async function setPendingImpl(
   world: World,
   from: string,
   unitroller: Unitroller,
-  comptrollerImpl: ComptrollerImpl
+  comptrollerImpl: ComptrollerImplS
 ): Promise<World> {
   let invokation = await invoke(
     world,
     from,
     unitroller,
     await unitroller.populateTransaction._setPendingImplementation(
-      comptrollerImpl._address
+      comptrollerImpl.address
     ),
     "_setPendingImplementation",
     ComptrollerErrorReporter
@@ -112,7 +106,7 @@ async function setPendingImpl(
 
   world = addAction(
     world,
-    `Set pending comptroller impl to ${comptrollerImpl.name}`,
+    `Set pending comptroller impl to ${comptrollerImpl.address}`,
     invokation
   );
 
@@ -174,7 +168,7 @@ export function unitrollerCommands() {
       (world, from, { unitroller, pendingAdmin }) =>
         setPendingAdmin(world, from, unitroller, pendingAdmin.val)
     ),
-    new Command<{ unitroller: Unitroller; comptrollerImpl: ComptrollerImpl }>(
+    new Command<{ unitroller: Unitroller; comptrollerImpl: ComptrollerImplS }>(
       `
         #### SetPendingImpl
 

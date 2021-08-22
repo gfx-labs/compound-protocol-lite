@@ -1,6 +1,5 @@
 import { Event } from "../Event";
 import { addAction, World } from "../World";
-import { Governor } from "../Contract/Governor";
 import { buildGovernor } from "../Builder/GovernorBuilder";
 import { invoke } from "../Invokation";
 import {
@@ -20,7 +19,15 @@ import { processProposalEvent } from "./ProposalEvent";
 import { processGuardianEvent } from "./GovGuardianEvent";
 import { encodeParameters, rawValues } from "../Utils";
 import { getGovernorV } from "../Value/GovernorValue";
+import {
+  GovernorAlpha,
+  GovernorAlphaHarness,
+  GovernorAlphaHarness__factory,
+  GovernorBravoDelegate,
+  GovernorBravoDelegator,
+} from "../../../../../typechain";
 
+type Governor = GovernorAlpha;
 async function genGovernor(
   world: World,
   from: string,
@@ -35,7 +42,7 @@ async function genGovernor(
 
   return addAction(
     world,
-    `Deployed Governor ${govData.contract} to address ${governor._address}`,
+    `Deployed Governor ${govData.contract} to address ${governor.address}`,
     govData.invokation
   );
 }
@@ -52,7 +59,7 @@ async function verifyGovernor(
       `Politely declining to verify on local network: ${world.network}.`
     );
   } else {
-    await verify(world, apiKey, modelName, contractName, governor._address);
+    await verify(world, apiKey, modelName, contractName, governor.address);
   }
 
   return world;
@@ -72,13 +79,9 @@ async function propose(
     world,
     from,
     governor,
-    await governor.populateTransaction.propose(
-      targets,
-      values,
-      signatures,
-      calldatas,
-      description
-    ),
+    await governor.populateTransaction[
+      "propose(address[],uint256[],string[],bytes[],string)"
+    ](targets, values, signatures, calldatas, description),
     "propose"
   );
   return addAction(
@@ -101,7 +104,9 @@ async function setBlockNumber(
       world,
       from,
       governor,
-      await governor.populateTransaction.setBlockNumber(blockNumber.encode()),
+      await governor.populateTransaction["setBlockNumber(uint256)"](
+        blockNumber.encode()
+      ),
       "setBlockNumber"
     )
   );
@@ -120,7 +125,7 @@ async function setBlockTimestamp(
       world,
       from,
       governor,
-      await governor.populateTransaction.setBlockTimestamp(
+      await governor.populateTransaction["setBlockTimestamp(uint256)"](
         blockTimestamp.encode()
       ),
       "setBlockTimestamp"

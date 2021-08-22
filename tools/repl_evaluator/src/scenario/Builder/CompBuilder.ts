@@ -1,15 +1,12 @@
-import { Event } from '../Event';
-import { World, addAction } from '../World';
-import { Comp, CompScenario } from '../Contract/Comp';
-import { Invokation } from '../Invokation';
-import { getAddressV } from '../CoreValue';
-import { StringV, AddressV } from '../Value';
-import { Arg, Fetcher, getFetcherValue } from '../Command';
-import { storeAndSaveContract } from '../Networks';
-import { getContract } from '../Contract';
-
-const CompContract = getContract('Comp');
-const CompScenarioContract = getContract('CompScenario');
+import { Event } from "../Event";
+import { World, addAction } from "../World";
+import { Comp, CompScenario } from "../../../../../typechain";
+import { Invokation } from "../Invokation";
+import { getAddressV } from "../CoreValue";
+import { StringV, AddressV } from "../Value";
+import { Arg, Fetcher, getFetcherValue } from "../Command";
+import { storeAndSaveContract } from "../Networks";
+import { deploy_contract_world, getContract } from "../Contract";
 
 export interface TokenData {
   invokation: Invokation<Comp>;
@@ -33,17 +30,20 @@ export async function buildComp(
       * "Comp Deploy Scenario account:<Address>" - Deploys Scenario Comp Token
         * E.g. "Comp Deploy Scenario Geoff"
     `,
-      'Scenario',
-      [
-        new Arg("account", getAddressV),
-      ],
+      "Scenario",
+      [new Arg("account", getAddressV)],
       async (world, { account }) => {
         return {
-          invokation: await CompScenarioContract.deploy<CompScenario>(world, from, [account.val]),
-          contract: 'CompScenario',
-          symbol: 'COMP',
-          name: 'Compound Governance Token',
-          decimals: 18
+          invokation: await deploy_contract_world<CompScenario>(
+            world,
+            from,
+            "CompScenario",
+            [account.val]
+          ),
+          contract: "CompScenario",
+          symbol: "COMP",
+          name: "Compound Governance Token",
+          decimals: 18,
         };
       }
     ),
@@ -55,34 +55,44 @@ export async function buildComp(
       * "Comp Deploy account:<Address>" - Deploys Comp Token
         * E.g. "Comp Deploy Geoff"
     `,
-      'Comp',
-      [
-        new Arg("account", getAddressV),
-      ],
+      "Comp",
+      [new Arg("account", getAddressV)],
       async (world, { account }) => {
         if (world.isLocalNetwork()) {
           return {
-            invokation: await CompScenarioContract.deploy<CompScenario>(world, from, [account.val]),
-            contract: 'CompScenario',
-            symbol: 'COMP',
-            name: 'Compound Governance Token',
-            decimals: 18
+            invokation: await deploy_contract_world<CompScenario>(
+              world,
+              from,
+              "CompScenario",
+              [account.val]
+            ),
+            contract: "CompScenario",
+            symbol: "COMP",
+            name: "Compound Governance Token",
+            decimals: 18,
           };
         } else {
           return {
-            invokation: await CompContract.deploy<Comp>(world, from, [account.val]),
-            contract: 'Comp',
-            symbol: 'COMP',
-            name: 'Compound Governance Token',
-            decimals: 18
+            invokation: await deploy_contract_world<Comp>(world, from, "Comp", [
+              account.val,
+            ]),
+            contract: "Comp",
+            symbol: "COMP",
+            name: "Compound Governance Token",
+            decimals: 18,
           };
         }
       },
       { catchall: true }
-    )
+    ),
   ];
 
-  let tokenData = await getFetcherValue<any, TokenData>("DeployComp", fetchers, world, params);
+  let tokenData = await getFetcherValue<any, TokenData>(
+    "DeployComp",
+    fetchers,
+    world,
+    params
+  );
   let invokation = tokenData.invokation;
   delete tokenData.invokation;
 
@@ -91,18 +101,12 @@ export async function buildComp(
   }
 
   const comp = invokation.value!;
-  tokenData.address = comp._address;
+  tokenData.address = comp.address;
 
-  world = await storeAndSaveContract(
-    world,
-    comp,
-    'Comp',
-    invokation,
-    [
-      { index: ['Comp'], data: tokenData },
-      { index: ['Tokens', tokenData.symbol], data: tokenData }
-    ]
-  );
+  world = await storeAndSaveContract(world, comp, "Comp", invokation, [
+    { index: ["Comp"], data: tokenData },
+    { index: ["Tokens", tokenData.symbol], data: tokenData },
+  ]);
 
   tokenData.invokation = invokation;
 

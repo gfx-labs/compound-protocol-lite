@@ -1,22 +1,31 @@
-import {Event} from '../Event';
-import {addAction, World} from '../World';
-import {Unitroller} from '../Contract/Unitroller';
-import {Invokation} from '../Invokation';
-import {Arg, Fetcher, getFetcherValue} from '../Command';
-import {storeAndSaveContract} from '../Networks';
-import {getContract} from '../Contract';
+import { Event } from "../Event";
+import { addAction, World } from "../World";
+import { Unitroller } from "../../../../../typechain";
+import { Invokation } from "../Invokation";
+import { Arg, Fetcher, getFetcherValue } from "../Command";
+import { storeAndSaveContract } from "../Networks";
+import { getContract } from "../Contract";
 
 const UnitrollerContract = getContract("Unitroller");
 
 export interface UnitrollerData {
-  invokation: Invokation<Unitroller>,
-  description: string,
-  address?: string
+  invokation: Invokation<Unitroller>;
+  description: string;
+  address?: string;
 }
 
-export async function buildUnitroller(world: World, from: string, event: Event): Promise<{world: World, unitroller: Unitroller, unitrollerData: UnitrollerData}> {
+export async function buildUnitroller(
+  world: World,
+  from: string,
+  event: Event
+): Promise<{
+  world: World;
+  unitroller: Unitroller;
+  unitrollerData: UnitrollerData;
+}> {
   const fetchers = [
-    new Fetcher<{}, UnitrollerData>(`
+    new Fetcher<{}, UnitrollerData>(
+      `
         #### Unitroller
 
         * "" - The Upgradable Comptroller
@@ -26,15 +35,24 @@ export async function buildUnitroller(world: World, from: string, event: Event):
       [],
       async (world, {}) => {
         return {
-          invokation: await UnitrollerContract.deploy<Unitroller>(world, from, []),
-          description: "Unitroller"
+          invokation: await UnitrollerContract.deploy<Unitroller>(
+            world,
+            from,
+            []
+          ),
+          description: "Unitroller",
         };
       },
-      {catchall: true}
-    )
+      { catchall: true }
+    ),
   ];
 
-  let unitrollerData = await getFetcherValue<any, UnitrollerData>("DeployUnitroller", fetchers, world, event);
+  let unitrollerData = await getFetcherValue<any, UnitrollerData>(
+    "DeployUnitroller",
+    fetchers,
+    world,
+    event
+  );
   let invokation = unitrollerData.invokation;
   delete unitrollerData.invokation;
 
@@ -42,17 +60,15 @@ export async function buildUnitroller(world: World, from: string, event: Event):
     throw invokation.error;
   }
   const unitroller = invokation.value!;
-  unitrollerData.address = unitroller._address;
+  unitrollerData.address = unitroller.address;
 
   world = await storeAndSaveContract(
     world,
     unitroller,
-    'Unitroller',
+    "Unitroller",
     invokation,
-    [
-      { index: ['Unitroller'], data: unitrollerData }
-    ]
+    [{ index: ["Unitroller"], data: unitrollerData }]
   );
 
-  return {world, unitroller, unitrollerData};
+  return { world, unitroller, unitrollerData };
 }

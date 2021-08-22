@@ -1,6 +1,6 @@
 import { Event } from "../Event";
 import { addAction, describeUser, World } from "../World";
-import { Maximillion } from "../Contract/Maximillion";
+import { Maximillion } from "../../../../../typechain/Maximillion";
 import { invoke } from "../Invokation";
 import { getAddressV, getEventV, getStringV } from "../CoreValue";
 import { AddressV, EventV, NumberV, StringV } from "../Value";
@@ -27,7 +27,7 @@ async function genMaximillion(
 
   world = addAction(
     world,
-    `Added Maximillion (${maximillionData.description}) at address ${maximillion._address}`,
+    `Added Maximillion (${maximillionData.description}) at address ${maximillion.address}`,
     maximillionData.invokation
   );
 
@@ -49,7 +49,7 @@ async function verifyMaximillion(
       apiKey,
       "Maximillion",
       "Maximillion",
-      maximillion._address
+      maximillion.address
     );
   }
 

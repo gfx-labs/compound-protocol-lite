@@ -1,6 +1,6 @@
 import { Event } from "../Event";
 import { addAction, World } from "../World";
-import { Timelock } from "../Contract/Timelock";
+import { TimelockHarness as Timelock } from "../../../../../typechain";
 import { buildTimelock, TimelockData } from "../Builder/TimelockBuilder";
 import { invoke } from "../Invokation";
 import {
@@ -21,16 +21,16 @@ async function genTimelock(
   from: string,
   params: Event
 ): Promise<World> {
-  let { world: nextWorld, timelock, timelockData } = await buildTimelock(
-    world,
-    from,
-    params
-  );
+  let {
+    world: nextWorld,
+    timelock,
+    timelockData,
+  } = await buildTimelock(world, from, params);
   world = nextWorld;
 
   world = addAction(
     world,
-    `Deployed Timelock to address ${timelock._address}`,
+    `Deployed Timelock to address ${timelock.address}`,
     timelockData.invokation
   );
 
@@ -112,45 +112,45 @@ async function setDelay(
   );
 }
 
-async function harnessFastForward(
-  world: World,
-  from: string,
-  timeLock: Timelock,
-  seconds: NumberV
-): Promise<World> {
-  return addAction(
-    world,
-    `Set Timelock blockTimestamp forward by ${seconds.show()}`,
-    await invoke(
-      world,
-      from,
-      timeLock,
-      await timeLock.populateTransaction.harnessFastForward(seconds.encode()),
-      "harnessFastForward"
-    )
-  );
-}
-
-async function harnessSetBlockTimestamp(
-  world: World,
-  from: string,
-  timeLock: Timelock,
-  seconds: NumberV
-): Promise<World> {
-  return addAction(
-    world,
-    `Set Timelock blockTimestamp to ${seconds.show()}`,
-    await invoke(
-      world,
-      from,
-      timeLock,
-      await timeLock.populateTransaction.harnessSetBlockTimestamp(
-        seconds.encode()
-      ),
-      "harnessSetBlockTimestamp"
-    )
-  );
-}
+//async function harnessFastForward(
+//  world: World,
+//  from: string,
+//  timeLock: Timelock,
+//  seconds: NumberV
+//): Promise<World> {
+//  return addAction(
+//    world,
+//    `Set Timelock blockTimestamp forward by ${seconds.show()}`,
+//    await invoke(
+//      world,
+//      from,
+//      timeLock,
+//      await timeLock.populateTransaction.harnessFastForward(seconds.encode()),
+//      "harnessFastForward"
+//    )
+//  );
+//}
+//
+//async function harnessSetBlockTimestamp(
+//  world: World,
+//  from: string,
+//  timeLock: Timelock,
+//  seconds: NumberV
+//): Promise<World> {
+//  return addAction(
+//    world,
+//    `Set Timelock blockTimestamp to ${seconds.show()}`,
+//    await invoke(
+//      world,
+//      from,
+//      timeLock,
+//      await timeLock.populateTransaction.harnessSetBlockTimestamp(
+//        seconds.encode()
+//      ),
+//      "harnessSetBlockTimestamp"
+//    )
+//  );
+//}
 
 async function queueTransaction(
   world: World,
@@ -262,7 +262,7 @@ async function verifyTimelock(
       `Politely declining to verify on local network: ${world.network}.`
     );
   } else {
-    await verify(world, apiKey, "Timelock", contractName, timelock._address);
+    await verify(world, apiKey, "Timelock", contractName, timelock.address);
   }
 
   return world;
@@ -293,8 +293,11 @@ export function timelockCommands() {
         new Arg("timelock", getTimelock, { implicit: true }),
         new Arg("seconds", getNumberV),
       ],
-      (world, from, { timelock, seconds }) =>
-        harnessFastForward(world, from, timelock, seconds)
+      (world, _from, { timelock, seconds }) => {
+        console.log("FastForward for timelockHarness does not exist");
+        return Promise.resolve(world);
+      }
+      //harnessFastForward(world, from, timelock, seconds)
     ),
     new Command<{ timelock: Timelock; seconds: NumberV }>(
       `
@@ -308,8 +311,11 @@ export function timelockCommands() {
         new Arg("timelock", getTimelock, { implicit: true }),
         new Arg("seconds", getNumberV),
       ],
-      (world, from, { timelock, seconds }) =>
-        harnessSetBlockTimestamp(world, from, timelock, seconds)
+      (world, from, { timelock, seconds }) => {
+        console.log("Timelock SetBlockTimestamp not implemented");
+        //harnessSetBlockTimestamp(world, from, timelock, seconds)
+        return Promise.resolve(world);
+      }
     ),
     new Command<{ timelock: Timelock; delay: NumberV }>(
       `

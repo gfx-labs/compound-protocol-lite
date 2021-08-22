@@ -1,6 +1,6 @@
 import {Event} from '../Event';
 import {addAction, World} from '../World';
-import {InterestRateModel} from '../Contract/InterestRateModel';
+import {InterestRateModel} from '../../../../../typechain/InterestRateModel';
 import {buildInterestRateModel} from '../Builder/InterestRateModelBuilder';
 import {invoke} from '../Invokation';
 import {
@@ -25,7 +25,7 @@ async function genInterestRateModel(world: World, from: string, params: Event): 
 
   world = addAction(
     world,
-    `Deployed interest rate model (${interestRateModelData.description}) to address ${interestRateModel._address}`,
+    `Deployed interest rate model (${interestRateModelData.description}) to address ${interestRateModel.address}`,
     interestRateModelData.invokation
   );
 
@@ -36,7 +36,7 @@ async function verifyInterestRateModel(world: World, interestRateModel: Interest
   if (world.isLocalNetwork()) {
     world.printer.printLine(`Politely declining to verify on local network: ${world.network}.`);
   } else {
-    await verify(world, apiKey, modelName, contractName, interestRateModel._address);
+    await verify(world, apiKey, modelName, contractName, interestRateModel.address);
   }
 
   return world;

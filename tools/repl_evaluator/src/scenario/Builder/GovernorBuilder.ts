@@ -1,18 +1,15 @@
 import { Event } from "../Event";
 import { World } from "../World";
-import { Governor } from "../Contract/Governor";
 import { Invokation } from "../Invokation";
 import { getAddressV, getNumberV, getStringV } from "../CoreValue";
 import { AddressV, NumberV, StringV } from "../Value";
 import { Arg, Fetcher, getFetcherValue } from "../Command";
 import { storeAndSaveContract } from "../Networks";
-import { getContract } from "../Contract";
-
-const GovernorAlphaContract = getContract("GovernorAlpha");
-const GovernorAlphaHarnessContract = getContract("GovernorAlphaHarness");
+import { deploy_contract_world, getContract } from "../Contract";
+import { GovernorAlpha, GovernorAlphaHarness } from "../../../../../typechain";
 
 export interface GovernorData {
-  invokation: Invokation<Governor>;
+  invokation: Invokation<GovernorAlpha | GovernorAlphaHarness>;
   name: string;
   contract: string;
   address?: string;
@@ -22,10 +19,14 @@ export async function buildGovernor(
   world: World,
   from: string,
   params: Event
-): Promise<{ world: World; governor: Governor; govData: GovernorData }> {
+): Promise<{
+  world: World;
+  governor: GovernorAlpha | GovernorAlphaHarness;
+  govData: GovernorData;
+}> {
   const fetchers = [
     new Fetcher<
-      { name: StringV, timelock: AddressV, comp: AddressV, guardian: AddressV },
+      { name: StringV; timelock: AddressV; comp: AddressV; guardian: AddressV },
       GovernorData
     >(
       `
@@ -39,22 +40,23 @@ export async function buildGovernor(
         new Arg("name", getStringV),
         new Arg("timelock", getAddressV),
         new Arg("comp", getAddressV),
-        new Arg("guardian", getAddressV)
+        new Arg("guardian", getAddressV),
       ],
       async (world, { name, timelock, comp, guardian }) => {
         return {
-          invokation: await GovernorAlphaContract.deploy<Governor>(
+          invokation: await deploy_contract_world<GovernorAlpha>(
             world,
             from,
+            "GovernorAlpha",
             [timelock.val, comp.val, guardian.val]
           ),
           name: name.val,
-          contract: "GovernorAlpha"
+          contract: "GovernorAlpha",
         };
       }
     ),
     new Fetcher<
-      { name: StringV, timelock: AddressV, comp: AddressV, guardian: AddressV},
+      { name: StringV; timelock: AddressV; comp: AddressV; guardian: AddressV },
       GovernorData
     >(
       `
@@ -68,21 +70,21 @@ export async function buildGovernor(
         new Arg("name", getStringV),
         new Arg("timelock", getAddressV),
         new Arg("comp", getAddressV),
-        new Arg("guardian", getAddressV)
+        new Arg("guardian", getAddressV),
       ],
       async (world, { name, timelock, comp, guardian }) => {
         return {
-          invokation: await GovernorAlphaHarnessContract.deploy<Governor>(
+          invokation: await deploy_contract_world<GovernorAlphaHarness>(
             world,
             from,
+            "GovernorAlphaHarness",
             [timelock.val, comp.val, guardian.val]
           ),
           name: name.val,
-          contract: "GovernorAlphaHarness"
+          contract: "GovernorAlphaHarness",
         };
       }
-    )
-
+    ),
   ];
 
   let govData = await getFetcherValue<any, GovernorData>(
@@ -99,16 +101,14 @@ export async function buildGovernor(
   }
 
   const governor = invokation.value!;
-  govData.address = governor._address;
+  govData.address = governor.address;
 
   world = await storeAndSaveContract(
     world,
     governor,
     govData.name,
     invokation,
-    [
-      { index: ["Governor", govData.name], data: govData },
-    ]
+    [{ index: ["Governor", govData.name], data: govData }]
   );
 
   return { world, governor, govData };

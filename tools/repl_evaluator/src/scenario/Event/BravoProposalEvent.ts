@@ -1,11 +1,13 @@
 import { Event } from "../Event";
 import { addAction, describeUser, World } from "../World";
-import { GovernorBravo } from "../Contract/GovernorBravo";
 import { invoke } from "../Invokation";
 import { getEventV } from "../CoreValue";
 import { EventV } from "../Value";
 import { Arg, Command, processCommandEvent } from "../Command";
 import { getProposalId } from "../Value/BravoProposalValue";
+
+import { GovernorBravo } from "./GovernorBravoEvent/GovernorBravoHelpers";
+import { GovernorBravoDelegate__factory } from "../../../../../typechain";
 
 function getSupport(support: Event): number {
   if (typeof support === "string") {
@@ -29,8 +31,8 @@ function getReason(reason: Event): string {
 }
 
 async function describeProposal(
-  world: World,
-  governor: GovernorBravo,
+  _world: World,
+  _governor: GovernorBravo,
   proposalId: number
 ): Promise<string> {
   return `proposal ${proposalId.toString()}`; // TODO: Cleanup
@@ -52,16 +54,19 @@ export function proposalCommands(governor: GovernorBravo) {
         new Arg("reason", getEventV),
       ],
       async (world, from, { proposalIdent, support, reason }) => {
+        const governorBravo = new GovernorBravoDelegate__factory().attach(
+          governor.address
+        );
         const proposalId = await getProposalId(
           world,
-          governor,
+          governorBravo,
           proposalIdent.val
         );
         const invokation = await invoke(
           world,
           from,
           governor,
-          await governor.populateTransaction.castVoteWithReason(
+          await governorBravo.populateTransaction.castVoteWithReason(
             proposalId,
             getSupport(support.val),
             getReason(reason.val)
@@ -91,16 +96,19 @@ export function proposalCommands(governor: GovernorBravo) {
       "Vote",
       [new Arg("proposalIdent", getEventV), new Arg("support", getEventV)],
       async (world, from, { proposalIdent, support }) => {
+        const governorBravo = new GovernorBravoDelegate__factory().attach(
+          governor.address
+        );
         const proposalId = await getProposalId(
           world,
-          governor,
+          governorBravo,
           proposalIdent.val
         );
         const invokation = await invoke(
           world,
           from,
           governor,
-          await governor.populateTransaction.castVote(
+          await governorBravo.populateTransaction.castVote(
             proposalId,
             getSupport(support.val)
           ),
@@ -128,16 +136,19 @@ export function proposalCommands(governor: GovernorBravo) {
       "Queue",
       [new Arg("proposalIdent", getEventV)],
       async (world, from, { proposalIdent }) => {
+        const governorBravo = new GovernorBravoDelegate__factory().attach(
+          governor.address
+        );
         const proposalId = await getProposalId(
           world,
-          governor,
+          governorBravo,
           proposalIdent.val
         );
         const invokation = await invoke(
           world,
           from,
           governor,
-          await governor.populateTransaction.queue(proposalId),
+          await governorBravo.populateTransaction.queue(proposalId),
           "queue"
         );
 
@@ -162,16 +173,20 @@ export function proposalCommands(governor: GovernorBravo) {
       "Execute",
       [new Arg("proposalIdent", getEventV)],
       async (world, from, { proposalIdent }) => {
+        const governorBravo = new GovernorBravoDelegate__factory().attach(
+          governor.address
+        );
+
         const proposalId = await getProposalId(
           world,
-          governor,
+          governorBravo,
           proposalIdent.val
         );
         const invokation = await invoke(
           world,
           from,
           governor,
-          await governor.populateTransaction.execute(proposalId),
+          await governorBravo.populateTransaction.execute(proposalId),
           "execute"
         );
 
@@ -196,16 +211,19 @@ export function proposalCommands(governor: GovernorBravo) {
       "Cancel",
       [new Arg("proposalIdent", getEventV)],
       async (world, from, { proposalIdent }) => {
+        const governorBravo = new GovernorBravoDelegate__factory().attach(
+          governor.address
+        );
         const proposalId = await getProposalId(
           world,
-          governor,
+          governorBravo,
           proposalIdent.val
         );
         const invokation = await invoke(
           world,
           from,
           governor,
-          await governor.populateTransaction.cancel(proposalId),
+          await governorBravo.populateTransaction.cancel(proposalId),
           "cancel"
         );
 

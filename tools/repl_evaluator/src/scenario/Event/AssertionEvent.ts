@@ -4,7 +4,6 @@ import { getCoreValue } from "../CoreValue";
 import { Failure, InvokationRevertFailure } from "../Invokation";
 import { getEventV, getMapV, getNumberV, getStringV } from "../CoreValue";
 import {
-  AddressV,
   BoolV,
   EventV,
   ListV,
@@ -547,7 +546,7 @@ export function assertionCommands() {
       `,
       "Success",
       [],
-      (world, { given }) => assertSuccess(world)
+      (world, {}) => assertSuccess(world)
     ),
 
     new View<{ name: StringV; params: MapV }>(

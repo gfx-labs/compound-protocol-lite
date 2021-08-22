@@ -1,9 +1,7 @@
 import { Event } from "../Event";
 import { addAction, describeUser, World } from "../World";
 import { decodeCall, getPastEvents } from "../Contract";
-import { Comptroller } from "../Contract/Comptroller";
-import { ComptrollerImpl } from "../Contract/ComptrollerImpl";
-import { CToken } from "../Contract/CToken";
+import { CToken } from "../../../../../typechain/CToken";
 import { invoke } from "../Invokation";
 import {
   getAddressV,
@@ -15,14 +13,50 @@ import {
   getStringV,
   getCoreValue,
 } from "../CoreValue";
+
+import {
+  Comptroller,
+  ComptrollerG1,
+  ComptrollerG2,
+  ComptrollerG3,
+  ComptrollerG4,
+  ComptrollerG5,
+  ComptrollerG6,
+  ComptrollerG7,
+  ComptrollerScenario,
+  ComptrollerScenarioG1,
+  ComptrollerScenarioG2,
+  ComptrollerScenarioG3,
+  ComptrollerScenarioG4,
+  ComptrollerScenarioG5,
+  ComptrollerScenarioG6,
+  ComptrollerBorked,
+  Unitroller,
+  Unitroller__factory,
+} from "../../../../../typechain";
+
+export type ComptrollerS = ComptrollerScenario;
+export type ComptrollerG1S = ComptrollerScenarioG1;
+export type ComptrollerG2S = ComptrollerScenarioG2;
+export type ComptrollerG3S = ComptrollerScenarioG3;
+export type ComptrollerG4S = ComptrollerScenarioG4;
+export type ComptrollerG5S = ComptrollerScenarioG5;
+export type ComptrollerG6S = ComptrollerScenarioG6;
+// ComptrollerGXS = ComptrollerGX + ComptrollerScenarioGX
+
+export type ComptrollerImplS = ComptrollerImpl | ComptrollerScenarioImpl;
+
 import { AddressV, BoolV, EventV, NumberV, StringV } from "../Value";
 import { Arg, Command, View, processCommandEvent } from "../Command";
-import { buildComptrollerImpl } from "../Builder/ComptrollerImplBuilder";
+import {
+  buildComptrollerImpl,
+  ComptrollerImpl,
+  ComptrollerScenarioImpl,
+} from "../Builder/ComptrollerImplBuilder";
 import { ComptrollerErrorReporter } from "../ErrorReporter";
-import { getComptroller, getComptrollerImpl } from "../ContractLookup";
+import { getComptroller } from "../ContractLookup";
 import { getLiquidity } from "../Value/ComptrollerValue";
 import { getCTokenV } from "../Value/CTokenValue";
-import { encodedNumber } from "../Encoding";
 import { encodeABI, rawValues } from "../Utils";
 
 async function genComptroller(
@@ -39,17 +73,27 @@ async function genComptroller(
 
   world = addAction(
     world,
-    `Added Comptroller (${comptrollerData.description}) at address ${comptroller._address}`,
+    `Added Comptroller (${comptrollerData.description}) at address ${comptroller.address}`,
     comptrollerData.invokation
   );
 
   return world;
 }
 
+type setPausedTypes =
+  | ComptrollerG2S
+  | ComptrollerG3S
+  | ComptrollerG4S
+  | ComptrollerG5S
+  | ComptrollerG6S
+  | ComptrollerG7;
+const canSetPaused = (o: any): o is setPausedTypes => {
+  return o["_setMintPaused"] != undefined;
+};
 async function setPaused(
   world: World,
   from: string,
-  comptroller: Comptroller,
+  comptroller: setPausedTypes,
   actionName: string,
   isPaused: boolean
 ): Promise<World> {
@@ -79,10 +123,21 @@ async function setPaused(
   return world;
 }
 
+type setMaxAssetsTypes =
+  | ComptrollerG1S
+  | ComptrollerG2S
+  | ComptrollerG3S
+  | ComptrollerG4S
+  | ComptrollerG5S;
+
+const canSetMaxAsset = (o: any): o is setMaxAssetsTypes => {
+  return o["_setMaxAssets"] != undefined;
+};
+
 async function setMaxAssets(
   world: World,
   from: string,
-  comptroller: Comptroller,
+  comptroller: setMaxAssetsTypes,
   numberOfAssets: NumberV
 ): Promise<World> {
   let invokation = await invoke(
@@ -108,7 +163,7 @@ async function setMaxAssets(
 async function setLiquidationIncentive(
   world: World,
   from: string,
-  comptroller: Comptroller,
+  comptroller: ComptrollerImplS,
   liquidationIncentive: NumberV
 ): Promise<World> {
   let invokation = await invoke(
@@ -134,13 +189,13 @@ async function setLiquidationIncentive(
 async function supportMarket(
   world: World,
   from: string,
-  comptroller: Comptroller,
+  comptroller: ComptrollerImplS,
   cToken: CToken
 ): Promise<World> {
   if (world.dryRun) {
     // Skip this specifically on dry runs since it's likely to crash due to a number of reasons
     world.printer.printLine(
-      `Dry run: Supporting market  \`${cToken._address}\``
+      `Dry run: Supporting market  \`${cToken.address}\``
     );
     return world;
   }
@@ -149,7 +204,7 @@ async function supportMarket(
     world,
     from,
     comptroller,
-    await comptroller.populateTransaction._supportMarket(cToken._address),
+    await comptroller.populateTransaction._supportMarket(cToken.address),
     "_supportMarket",
     ComptrollerErrorReporter
   );
@@ -159,17 +214,28 @@ async function supportMarket(
   return world;
 }
 
+type unlistMarketTypes =
+  | ComptrollerScenario
+  | ComptrollerScenarioG1
+  | ComptrollerScenarioG3
+  | ComptrollerScenarioG4
+  | ComptrollerScenarioG5
+  | ComptrollerScenarioG6;
+
+const canUnlistMarketTypes = (o: any): o is unlistMarketTypes => {
+  return o["unlist"] != undefined;
+};
 async function unlistMarket(
   world: World,
   from: string,
-  comptroller: Comptroller,
+  comptroller: unlistMarketTypes,
   cToken: CToken
 ): Promise<World> {
   let invokation = await invoke(
     world,
     from,
     comptroller,
-    await comptroller.populateTransaction.unlist(cToken._address),
+    await comptroller.populateTransaction.unlist(cToken.address),
     "_address",
     ComptrollerErrorReporter
   );
@@ -182,7 +248,7 @@ async function unlistMarket(
 async function enterMarkets(
   world: World,
   from: string,
-  comptroller: Comptroller,
+  comptroller: ComptrollerImplS,
   assets: string[]
 ): Promise<World> {
   let invokation = await invoke(
@@ -206,7 +272,7 @@ async function enterMarkets(
 async function exitMarket(
   world: World,
   from: string,
-  comptroller: Comptroller,
+  comptroller: ComptrollerImplS,
   asset: string
 ): Promise<World> {
   let invokation = await invoke(
@@ -230,7 +296,7 @@ async function exitMarket(
 async function setPriceOracle(
   world: World,
   from: string,
-  comptroller: Comptroller,
+  comptroller: ComptrollerImplS,
   priceOracleAddr: string
 ): Promise<World> {
   let invokation = await invoke(
@@ -257,7 +323,7 @@ async function setPriceOracle(
 async function setCollateralFactor(
   world: World,
   from: string,
-  comptroller: Comptroller,
+  comptroller: ComptrollerImplS,
   cToken: CToken,
   collateralFactor: NumberV
 ): Promise<World> {
@@ -266,7 +332,7 @@ async function setCollateralFactor(
     from,
     comptroller,
     await comptroller.populateTransaction._setCollateralFactor(
-      cToken._address,
+      cToken.address,
       collateralFactor.encode()
     ),
     "_setCollateralFactor",
@@ -285,7 +351,7 @@ async function setCollateralFactor(
 async function setCloseFactor(
   world: World,
   from: string,
-  comptroller: Comptroller,
+  comptroller: ComptrollerImplS,
   closeFactor: NumberV
 ): Promise<World> {
   let invokation = await invoke(
@@ -306,10 +372,13 @@ async function setCloseFactor(
   return world;
 }
 
+const canFastForward = (o: any): o is ComptrollerScenarioImpl => {
+  return o["fastForward"] != 0;
+};
 async function fastForward(
   world: World,
   from: string,
-  comptroller: Comptroller,
+  comptroller: ComptrollerScenarioImpl,
   blocks: NumberV
 ): Promise<World> {
   let invokation = await invoke(
@@ -333,23 +402,33 @@ async function fastForward(
 async function sendAny(
   world: World,
   from: string,
-  comptroller: Comptroller,
+  comptroller: ComptrollerImplS,
   signature: string,
   callArgs: string[]
 ): Promise<World> {
   const fnData = encodeABI(world, signature, callArgs);
   await world.hre.ethers.provider.getSigner().sendTransaction({
-    to: comptroller._address,
+    to: comptroller.address,
     data: fnData,
     from: from,
   });
   return world;
 }
 
+type addCompMarketsTypes =
+  | ComptrollerG3S
+  | ComptrollerG4S
+  | ComptrollerG5S
+  | ComptrollerG6S;
+
+const canAddCompMarkets = (o: any): o is addCompMarketsTypes => {
+  return o["_addCompMarkets"] != undefined;
+};
+
 async function addCompMarkets(
   world: World,
   from: string,
-  comptroller: Comptroller,
+  comptroller: addCompMarketsTypes,
   cTokens: CToken[]
 ): Promise<World> {
   let invokation = await invoke(
@@ -357,7 +436,7 @@ async function addCompMarkets(
     from,
     comptroller,
     await comptroller.populateTransaction._addCompMarkets(
-      cTokens.map((c) => c._address)
+      cTokens.map((c) => c.address)
     ),
     "_addCompMarkets",
     ComptrollerErrorReporter
@@ -372,17 +451,27 @@ async function addCompMarkets(
   return world;
 }
 
+type dropCompMarketTypes =
+  | ComptrollerG3S
+  | ComptrollerG4S
+  | ComptrollerG5S
+  | ComptrollerG6S;
+
+const canDropCompMarket = (o: any): o is dropCompMarketTypes => {
+  return o["_dropCompMarket"] != undefined;
+};
+
 async function dropCompMarket(
   world: World,
   from: string,
-  comptroller: Comptroller,
+  comptroller: dropCompMarketTypes,
   cToken: CToken
 ): Promise<World> {
   let invokation = await invoke(
     world,
     from,
     comptroller,
-    await comptroller.populateTransaction._dropCompMarket(cToken._address),
+    await comptroller.populateTransaction._dropCompMarket(cToken.address),
     "_dropCompMarket",
     ComptrollerErrorReporter
   );
@@ -392,10 +481,20 @@ async function dropCompMarket(
   return world;
 }
 
+type refreshCompSpeedsType =
+  | ComptrollerG3S
+  | ComptrollerG4S
+  | ComptrollerG5S
+  | ComptrollerG6S;
+
+const canRefreshCompSpeeds = (o: any): o is refreshCompSpeedsType => {
+  return o["refreshCompSpeeds"] != undefined;
+};
+
 async function refreshCompSpeeds(
   world: World,
   from: string,
-  comptroller: Comptroller
+  comptroller: refreshCompSpeedsType
 ): Promise<World> {
   let invokation = await invoke(
     world,
@@ -411,17 +510,28 @@ async function refreshCompSpeeds(
   return world;
 }
 
+type claimCompTypes =
+  | ComptrollerG3S
+  | ComptrollerG4S
+  | ComptrollerG5S
+  | ComptrollerG6S
+  | ComptrollerG7;
+
+const canClaimComp = (o: any): o is claimCompTypes => {
+  return o["claimComp(address)"] != undefined;
+};
+
 async function claimComp(
   world: World,
   from: string,
-  comptroller: Comptroller,
+  comptroller: claimCompTypes,
   holder: string
 ): Promise<World> {
   let invokation = await invoke(
     world,
     from,
     comptroller,
-    await comptroller.populateTransaction.claimComp(holder),
+    await comptroller.populateTransaction["claimComp(address)"](holder),
     from,
     ComptrollerErrorReporter
   );
@@ -431,10 +541,18 @@ async function claimComp(
   return world;
 }
 
+type updateContributorRewardsTypes = ComptrollerG6S | ComptrollerG7;
+
+const canUpdateContributorRewards = (
+  o: any
+): o is updateContributorRewardsTypes => {
+  return o["updateContributorRewards"] != undefined;
+};
+
 async function updateContributorRewards(
   world: World,
   from: string,
-  comptroller: Comptroller,
+  comptroller: updateContributorRewardsTypes,
   contributor: string
 ): Promise<World> {
   let invokation = await invoke(
@@ -455,10 +573,16 @@ async function updateContributorRewards(
   return world;
 }
 
+type grantCompTypes = ComptrollerG6S | ComptrollerG7;
+
+const canGrantCompTypes = (o: any): o is grantCompTypes => {
+  return o["_grantComp"] != undefined;
+};
+
 async function grantComp(
   world: World,
   from: string,
-  comptroller: Comptroller,
+  comptroller: grantCompTypes,
   recipient: string,
   amount: NumberV
 ): Promise<World> {
@@ -483,10 +607,20 @@ async function grantComp(
   return world;
 }
 
+type setCompRateTypes =
+  | ComptrollerG3S
+  | ComptrollerG4S
+  | ComptrollerG5S
+  | ComptrollerG6S;
+
+const canSetCompRate = (o: any): o is setCompRateTypes => {
+  return o["_setCompRate"] != undefined;
+};
+
 async function setCompRate(
   world: World,
   from: string,
-  comptroller: Comptroller,
+  comptroller: setCompRateTypes,
   rate: NumberV
 ): Promise<World> {
   let invokation = await invoke(
@@ -502,11 +636,15 @@ async function setCompRate(
 
   return world;
 }
+type setCompSpeedTypes = Comptroller | ComptrollerG7;
+const canSetCompSpeed = (o: any): o is setCompSpeedTypes => {
+  return o["_setCompSpeed"] != undefined;
+};
 
 async function setCompSpeed(
   world: World,
   from: string,
-  comptroller: Comptroller,
+  comptroller: setCompSpeedTypes,
   cToken: CToken,
   speed: NumberV
 ): Promise<World> {
@@ -515,7 +653,7 @@ async function setCompSpeed(
     from,
     comptroller,
     await comptroller.populateTransaction._setCompSpeed(
-      cToken._address,
+      cToken.address,
       speed.encode()
     ),
     "_setCompSpeed",
@@ -524,17 +662,24 @@ async function setCompSpeed(
 
   world = addAction(
     world,
-    `Comp speed for market ${cToken._address} set to ${speed.show()}`,
+    `Comp speed for market ${cToken.address} set to ${speed.show()}`,
     invokation
   );
 
   return world;
 }
 
+type setContributorCompSpeedTypes = ComptrollerG6S | ComptrollerG7;
+const canSetContributorCompSpeed = (
+  o: any
+): o is setContributorCompSpeedTypes => {
+  return o["_setContributorCompSpeed"] != undefined;
+};
+
 async function setContributorCompSpeed(
   world: World,
   from: string,
-  comptroller: Comptroller,
+  comptroller: setContributorCompSpeedTypes,
   contributor: string,
   speed: NumberV
 ): Promise<World> {
@@ -561,7 +706,7 @@ async function setContributorCompSpeed(
 
 async function printLiquidity(
   world: World,
-  comptroller: Comptroller
+  comptroller: ComptrollerImplS
 ): Promise<World> {
   let enterEvents = await getPastEvents(
     world,
@@ -594,14 +739,15 @@ async function printLiquidity(
 async function setPendingAdmin(
   world: World,
   from: string,
-  comptroller: Comptroller,
+  comptroller: ComptrollerImplS,
   newPendingAdmin: string
 ): Promise<World> {
+  const unitroller = new Unitroller__factory().attach(comptroller.address);
   let invokation = await invoke(
     world,
     from,
-    comptroller,
-    await comptroller.populateTransaction._setPendingAdmin(newPendingAdmin),
+    unitroller,
+    await unitroller.populateTransaction._setPendingAdmin(newPendingAdmin),
     "_setPendingAdmin",
     ComptrollerErrorReporter
   );
@@ -621,13 +767,14 @@ async function setPendingAdmin(
 async function acceptAdmin(
   world: World,
   from: string,
-  comptroller: Comptroller
+  comptroller: ComptrollerImplS
 ): Promise<World> {
+  const unitroller = new Unitroller__factory().attach(comptroller.address);
   let invokation = await invoke(
     world,
     from,
-    comptroller,
-    await comptroller.populateTransaction._acceptAdmin(),
+    unitroller,
+    await unitroller.populateTransaction._acceptAdmin(),
     "_acceptAdmin",
     ComptrollerErrorReporter
   );
@@ -641,10 +788,21 @@ async function acceptAdmin(
   return world;
 }
 
+type setPauseGuardianTypes =
+  | ComptrollerG2S
+  | ComptrollerG3S
+  | ComptrollerG4S
+  | ComptrollerG5S
+  | ComptrollerG6S
+  | ComptrollerG7;
+const canSetPauseGuardian = (o: any): o is setPauseGuardianTypes => {
+  return o["_setPauseGuardian"] != undefined;
+};
+
 async function setPauseGuardian(
   world: World,
   from: string,
-  comptroller: Comptroller,
+  comptroller: setPauseGuardianTypes,
   newPauseGuardian: string
 ): Promise<World> {
   let invokation = await invoke(
@@ -668,15 +826,27 @@ async function setPauseGuardian(
   return world;
 }
 
+type setGuardianPausedTypes =
+  | ComptrollerG2S
+  | ComptrollerG3S
+  | ComptrollerG4S
+  | ComptrollerG5S
+  | ComptrollerG6S
+  | ComptrollerG7;
+
+const canSetGuardianPaused = (o: any): o is setGuardianPausedTypes => {
+  return o["_setTransferPaused"] != undefined;
+};
+
 async function setGuardianPaused(
   world: World,
   from: string,
-  comptroller: Comptroller,
+  comptroller: setGuardianPausedTypes,
   action: string,
   state: boolean
 ): Promise<World> {
-  let fun;
-  let method = "";
+  let fun: any;
+  let method: string;
   switch (action) {
     case "Transfer":
       fun = comptroller.populateTransaction._setTransferPaused;
@@ -705,16 +875,29 @@ async function setGuardianPaused(
   return world;
 }
 
+type setGuardianMarketPausedTypes =
+  | ComptrollerG2S
+  | ComptrollerG3S
+  | ComptrollerG4S
+  | ComptrollerG5S
+  | ComptrollerG6S
+  | ComptrollerG7;
+
+const canSetGuardianMarketPaused = (
+  o: any
+): o is setGuardianMarketPausedTypes => {
+  return o["_setMintPaused"] != undefined;
+};
 async function setGuardianMarketPaused(
   world: World,
   from: string,
-  comptroller: Comptroller,
+  comptroller: setGuardianMarketPausedTypes,
   cToken: CToken,
   action: string,
   state: boolean
 ): Promise<World> {
-  let fun;
-  let method;
+  let fun: any;
+  let method: string;
   switch (action) {
     case "Mint":
       fun = comptroller.populateTransaction._setMintPaused;
@@ -729,7 +912,7 @@ async function setGuardianMarketPaused(
     world,
     from,
     comptroller,
-    fun(cToken._address, state),
+    fun(cToken.address, state),
     method,
     ComptrollerErrorReporter
   );
@@ -743,10 +926,15 @@ async function setGuardianMarketPaused(
   return world;
 }
 
+type setMarketBorrowCapsTypes = ComptrollerG5S | ComptrollerG6S | ComptrollerG7;
+const canSetMarketBorrowCaps = (o: any): o is setMarketBorrowCapsTypes => {
+  return o["_setMarketBorrowCaps"] != undefined;
+};
+
 async function setMarketBorrowCaps(
   world: World,
   from: string,
-  comptroller: Comptroller,
+  comptroller: setMarketBorrowCapsTypes,
   cTokens: CToken[],
   borrowCaps: NumberV[]
 ): Promise<World> {
@@ -755,7 +943,7 @@ async function setMarketBorrowCaps(
     from,
     comptroller,
     await comptroller.populateTransaction._setMarketBorrowCaps(
-      cTokens.map((c) => c._address),
+      cTokens.map((c) => c.address),
       borrowCaps.map((c) => c.encode())
     ),
     "_setMarketBorrowCaps",
@@ -770,11 +958,17 @@ async function setMarketBorrowCaps(
 
   return world;
 }
-
+type setBorrowCapGuardianTypes =
+  | ComptrollerG5S
+  | ComptrollerG6S
+  | ComptrollerG7;
+const canSetBorrowCapGuardian = (o: any): o is setBorrowCapGuardianTypes => {
+  return o["_setBorrowCapGuardian"] != undefined;
+};
 async function setBorrowCapGuardian(
   world: World,
   from: string,
-  comptroller: Comptroller,
+  comptroller: setBorrowCapGuardianTypes,
   newBorrowCapGuardian: string
 ): Promise<World> {
   let invokation = await invoke(
@@ -804,22 +998,26 @@ export function comptrollerCommands() {
   return [
     new Command<{ comptrollerParams: EventV }>(
       `
-        #### Deploy
+      #### Deploy
 
-        * "Comptroller Deploy ...comptrollerParams" - Generates a new Comptroller (not as Impl)
-          * E.g. "Comptroller Deploy YesNo"
+      * "Comptroller Deploy ...comptrollerParams" - Generates a new Comptroller (not as Impl)
+      * E.g. "Comptroller Deploy YesNo"
       `,
       "Deploy",
       [new Arg("comptrollerParams", getEventV, { variadic: true })],
       (world, from, { comptrollerParams }) =>
         genComptroller(world, from, comptrollerParams.val)
     ),
-    new Command<{ comptroller: Comptroller; action: StringV; isPaused: BoolV }>(
+    new Command<{
+      comptroller: ComptrollerImplS;
+      action: StringV;
+      isPaused: BoolV;
+    }>(
       `
-        #### SetPaused
+      #### SetPaused
 
-        * "Comptroller SetPaused <Action> <Bool>" - Pauses or unpaused given cToken function
-          * E.g. "Comptroller SetPaused "Mint" True"
+      * "Comptroller SetPaused <Action> <Bool>" - Pauses or unpaused given cToken function
+      * E.g. "Comptroller SetPaused "Mint" True"
       `,
       "SetPaused",
       [
@@ -827,15 +1025,20 @@ export function comptrollerCommands() {
         new Arg("action", getStringV),
         new Arg("isPaused", getBoolV),
       ],
-      (world, from, { comptroller, action, isPaused }) =>
-        setPaused(world, from, comptroller, action.val, isPaused.val)
+      (world, from, { comptroller, action, isPaused }) => {
+        if (canSetPaused(comptroller)) {
+          return setPaused(world, from, comptroller, action.val, isPaused.val);
+        }
+        console.log("The selected comptroller does not implement setPaused");
+        return Promise.resolve(world);
+      }
     ),
     new Command<{ comptroller: Comptroller; cToken: CToken }>(
       `
-        #### SupportMarket
+      #### SupportMarket
 
-        * "Comptroller SupportMarket <CToken>" - Adds support in the Comptroller for the given cToken
-          * E.g. "Comptroller SupportMarket cZRX"
+      * "Comptroller SupportMarket <CToken>" - Adds support in the Comptroller for the given cToken
+        * E.g. "Comptroller SupportMarket cZRX"
       `,
       "SupportMarket",
       [
@@ -845,12 +1048,12 @@ export function comptrollerCommands() {
       (world, from, { comptroller, cToken }) =>
         supportMarket(world, from, comptroller, cToken)
     ),
-    new Command<{ comptroller: Comptroller; cToken: CToken }>(
+    new Command<{ comptroller: any; cToken: CToken }>(
       `
-        #### UnList
+      #### UnList
 
-        * "Comptroller UnList <CToken>" - Mock unlists a given market in tests
-          * E.g. "Comptroller UnList cZRX"
+      * "Comptroller UnList <CToken>" - Mock unlists a given market in tests
+      * E.g. "Comptroller UnList cZRX"
       `,
       "UnList",
       [
@@ -862,10 +1065,10 @@ export function comptrollerCommands() {
     ),
     new Command<{ comptroller: Comptroller; cTokens: CToken[] }>(
       `
-        #### EnterMarkets
+      #### EnterMarkets
 
-        * "Comptroller EnterMarkets (<CToken> ...)" - User enters the given markets
-          * E.g. "Comptroller EnterMarkets (cZRX cETH)"
+      * "Comptroller EnterMarkets (<CToken> ...)" - User enters the given markets
+      * E.g. "Comptroller EnterMarkets (cZRX cETH)"
       `,
       "EnterMarkets",
       [
@@ -877,15 +1080,15 @@ export function comptrollerCommands() {
           world,
           from,
           comptroller,
-          cTokens.map((c) => c._address)
+          cTokens.map((c) => c.address)
         )
     ),
     new Command<{ comptroller: Comptroller; cToken: CToken }>(
       `
-        #### ExitMarket
+      #### ExitMarket
 
-        * "Comptroller ExitMarket <CToken>" - User exits the given markets
-          * E.g. "Comptroller ExitMarket cZRX"
+      * "Comptroller ExitMarket <CToken>" - User exits the given markets
+      * E.g. "Comptroller ExitMarket cZRX"
       `,
       "ExitMarket",
       [
@@ -893,29 +1096,34 @@ export function comptrollerCommands() {
         new Arg("cToken", getCTokenV),
       ],
       (world, from, { comptroller, cToken }) =>
-        exitMarket(world, from, comptroller, cToken._address)
+        exitMarket(world, from, comptroller, cToken.address)
     ),
     new Command<{ comptroller: Comptroller; maxAssets: NumberV }>(
       `
-        #### SetMaxAssets
+      #### SetMaxAssets
 
-        * "Comptroller SetMaxAssets <Number>" - Sets (or resets) the max allowed asset count
-          * E.g. "Comptroller SetMaxAssets 4"
+      * "Comptroller SetMaxAssets <Number>" - Sets (or resets) the max allowed asset count
+      * E.g. "Comptroller SetMaxAssets 4"
       `,
       "SetMaxAssets",
       [
         new Arg("comptroller", getComptroller, { implicit: true }),
         new Arg("maxAssets", getNumberV),
       ],
-      (world, from, { comptroller, maxAssets }) =>
-        setMaxAssets(world, from, comptroller, maxAssets)
+      (world, from, { comptroller, maxAssets }) => {
+        if (canSetMaxAsset(comptroller)) {
+          return setMaxAssets(world, from, comptroller, maxAssets);
+        }
+        console.log("The selected comptroller does not implement setPaused");
+        return Promise.resolve(world);
+      }
     ),
     new Command<{ comptroller: Comptroller; liquidationIncentive: NumberV }>(
       `
-        #### LiquidationIncentive
+      #### LiquidationIncentive
 
-        * "Comptroller LiquidationIncentive <Number>" - Sets the liquidation incentive
-          * E.g. "Comptroller LiquidationIncentive 1.1"
+      * "Comptroller LiquidationIncentive <Number>" - Sets the liquidation incentive
+      * E.g. "Comptroller LiquidationIncentive 1.1"
       `,
       "LiquidationIncentive",
       [
@@ -927,10 +1135,10 @@ export function comptrollerCommands() {
     ),
     new Command<{ comptroller: Comptroller; priceOracle: AddressV }>(
       `
-        #### SetPriceOracle
+      #### SetPriceOracle
 
-        * "Comptroller SetPriceOracle oracle:<Address>" - Sets the price oracle address
-          * E.g. "Comptroller SetPriceOracle 0x..."
+      * "Comptroller SetPriceOracle oracle:<Address>" - Sets the price oracle address
+      * E.g. "Comptroller SetPriceOracle 0x..."
       `,
       "SetPriceOracle",
       [
@@ -946,10 +1154,10 @@ export function comptrollerCommands() {
       collateralFactor: NumberV;
     }>(
       `
-        #### SetCollateralFactor
+      #### SetCollateralFactor
 
-        * "Comptroller SetCollateralFactor <CToken> <Number>" - Sets the collateral factor for given cToken to number
-          * E.g. "Comptroller SetCollateralFactor cZRX 0.1"
+      * "Comptroller SetCollateralFactor <CToken> <Number>" - Sets the collateral factor for given cToken to number
+        * E.g. "Comptroller SetCollateralFactor cZRX 0.1"
       `,
       "SetCollateralFactor",
       [
@@ -962,10 +1170,10 @@ export function comptrollerCommands() {
     ),
     new Command<{ comptroller: Comptroller; closeFactor: NumberV }>(
       `
-        #### SetCloseFactor
+      #### SetCloseFactor
 
-        * "Comptroller SetCloseFactor <Number>" - Sets the close factor to given percentage
-          * E.g. "Comptroller SetCloseFactor 0.2"
+      * "Comptroller SetCloseFactor <Number>" - Sets the close factor to given percentage
+      * E.g. "Comptroller SetCloseFactor 0.2"
       `,
       "SetCloseFactor",
       [
@@ -977,10 +1185,10 @@ export function comptrollerCommands() {
     ),
     new Command<{ comptroller: Comptroller; newPendingAdmin: AddressV }>(
       `
-        #### SetPendingAdmin
+      #### SetPendingAdmin
 
-        * "Comptroller SetPendingAdmin newPendingAdmin:<Address>" - Sets the pending admin for the Comptroller
-          * E.g. "Comptroller SetPendingAdmin Geoff"
+      * "Comptroller SetPendingAdmin newPendingAdmin:<Address>" - Sets the pending admin for the Comptroller
+        * E.g. "Comptroller SetPendingAdmin Geoff"
       `,
       "SetPendingAdmin",
       [
@@ -992,10 +1200,10 @@ export function comptrollerCommands() {
     ),
     new Command<{ comptroller: Comptroller }>(
       `
-        #### AcceptAdmin
+      #### AcceptAdmin
 
-        * "Comptroller AcceptAdmin" - Accepts admin for the Comptroller
-          * E.g. "From Geoff (Comptroller AcceptAdmin)"
+      * "Comptroller AcceptAdmin" - Accepts admin for the Comptroller
+        * E.g. "From Geoff (Comptroller AcceptAdmin)"
       `,
       "AcceptAdmin",
       [new Arg("comptroller", getComptroller, { implicit: true })],
@@ -1003,10 +1211,10 @@ export function comptrollerCommands() {
     ),
     new Command<{ comptroller: Comptroller; newPauseGuardian: AddressV }>(
       `
-        #### SetPauseGuardian
+      #### SetPauseGuardian
 
-        * "Comptroller SetPauseGuardian newPauseGuardian:<Address>" - Sets the PauseGuardian for the Comptroller
-          * E.g. "Comptroller SetPauseGuardian Geoff"
+      * "Comptroller SetPauseGuardian newPauseGuardian:<Address>" - Sets the PauseGuardian for the Comptroller
+        * E.g. "Comptroller SetPauseGuardian Geoff"
       `,
       "SetPauseGuardian",
       [
@@ -1019,11 +1227,11 @@ export function comptrollerCommands() {
 
     new Command<{ comptroller: Comptroller; action: StringV; isPaused: BoolV }>(
       `
-        #### SetGuardianPaused
+      #### SetGuardianPaused
 
-        * "Comptroller SetGuardianPaused <Action> <Bool>" - Pauses or unpaused given cToken function
-        * E.g. "Comptroller SetGuardianPaused "Transfer" True"
-        `,
+      * "Comptroller SetGuardianPaused <Action> <Bool>" - Pauses or unpaused given cToken function
+      * E.g. "Comptroller SetGuardianPaused "Transfer" True"
+      `,
       "SetGuardianPaused",
       [
         new Arg("comptroller", getComptroller, { implicit: true }),
@@ -1041,11 +1249,11 @@ export function comptrollerCommands() {
       isPaused: BoolV;
     }>(
       `
-        #### SetGuardianMarketPaused
+      #### SetGuardianMarketPaused
 
-        * "Comptroller SetGuardianMarketPaused <CToken> <Action> <Bool>" - Pauses or unpaused given cToken function
-        * E.g. "Comptroller SetGuardianMarketPaused cREP "Mint" True"
-        `,
+      * "Comptroller SetGuardianMarketPaused <CToken> <Action> <Bool>" - Pauses or unpaused given cToken function
+      * E.g. "Comptroller SetGuardianMarketPaused cREP "Mint" True"
+      `,
       "SetGuardianMarketPaused",
       [
         new Arg("comptroller", getComptroller, { implicit: true }),
@@ -1070,25 +1278,30 @@ export function comptrollerCommands() {
       _keyword: StringV;
     }>(
       `
-        #### FastForward
+      #### FastForward
 
-        * "FastForward n:<Number> Blocks" - Moves the block number forward "n" blocks. Note: in "CTokenScenario" and "ComptrollerScenario" the current block number is mocked (starting at 100000). This is the only way for the protocol to see a higher block number (for accruing interest).
+      * "FastForward n:<Number> Blocks" - Moves the block number forward "n" blocks. Note: in "CTokenScenario" and "ComptrollerScenario" the current block number is mocked (starting at 100000). This is the only way for the protocol to see a higher block number (for accruing interest).
           * E.g. "Comptroller FastForward 5 Blocks" - Move block number forward 5 blocks.
-      `,
+            `,
       "FastForward",
       [
         new Arg("comptroller", getComptroller, { implicit: true }),
         new Arg("blocks", getNumberV),
         new Arg("_keyword", getStringV),
       ],
-      (world, from, { comptroller, blocks }) =>
-        fastForward(world, from, comptroller, blocks)
+      (world, from, { comptroller, blocks }) => {
+        if (canFastForward(comptroller)) {
+          return fastForward(world, from, comptroller, blocks);
+        }
+        console.log("The selected Comptroller does not support FastForward");
+        return Promise.resolve(world);
+      }
     ),
     new View<{ comptroller: Comptroller }>(
       `
-        #### Liquidity
+      #### Liquidity
 
-        * "Comptroller Liquidity" - Prints liquidity of all minters or borrowers
+      * "Comptroller Liquidity" - Prints liquidity of all minters or borrowers
       `,
       "Liquidity",
       [new Arg("comptroller", getComptroller, { implicit: true })],
@@ -1096,9 +1309,9 @@ export function comptrollerCommands() {
     ),
     new View<{ comptroller: Comptroller; input: StringV }>(
       `
-        #### Decode
+      #### Decode
 
-        * "Decode input:<String>" - Prints information about a call to a Comptroller contract
+      * "Decode input:<String>" - Prints information about a call to a Comptroller contract
       `,
       "Decode",
       [
@@ -1140,8 +1353,15 @@ export function comptrollerCommands() {
         new Arg("comptroller", getComptroller, { implicit: true }),
         new Arg("cTokens", getCTokenV, { mapped: true }),
       ],
-      (world, from, { comptroller, cTokens }) =>
-        addCompMarkets(world, from, comptroller, cTokens)
+      (world, from, { comptroller, cTokens }) => {
+        if (canAddCompMarkets(comptroller)) {
+          return addCompMarkets(world, from, comptroller, cTokens);
+        }
+        console.log(
+          "The selected Comptroller does not implement addCompMarkets"
+        );
+        return Promise.resolve(world);
+      }
     ),
     new Command<{ comptroller: Comptroller; cToken: CToken }>(
       `
@@ -1155,8 +1375,16 @@ export function comptrollerCommands() {
         new Arg("comptroller", getComptroller, { implicit: true }),
         new Arg("cToken", getCTokenV),
       ],
-      (world, from, { comptroller, cToken }) =>
-        dropCompMarket(world, from, comptroller, cToken)
+      (world, from, { comptroller, cToken }) => {
+        if (canDropCompMarket(comptroller)) {
+          dropCompMarket(world, from, comptroller, cToken);
+          return Promise.resolve(world);
+        }
+        console.log(
+          "The selected Comptroller does not implement dropCompMarket"
+        );
+        return Promise.resolve(world);
+      }
     ),
 
     new Command<{ comptroller: Comptroller }>(
@@ -1168,8 +1396,15 @@ export function comptrollerCommands() {
       `,
       "RefreshCompSpeeds",
       [new Arg("comptroller", getComptroller, { implicit: true })],
-      (world, from, { comptroller }) =>
-        refreshCompSpeeds(world, from, comptroller)
+      (world, from, { comptroller }) => {
+        if (canRefreshCompSpeeds(comptroller)) {
+          return refreshCompSpeeds(world, from, comptroller);
+        }
+        console.log(
+          "The selected Comptroller does not implement dropCompMarket"
+        );
+        return Promise.resolve(world);
+      }
     ),
     new Command<{ comptroller: Comptroller; holder: AddressV }>(
       `
@@ -1191,7 +1426,7 @@ export function comptrollerCommands() {
       #### UpdateContributorRewards
 
       * "Comptroller UpdateContributorRewards <contributor>" - Updates rewards for a contributor
-      * E.g. "Comptroller UpdateContributorRewards Geoff
+        * E.g. "Comptroller UpdateContributorRewards Geoff
       `,
       "UpdateContributorRewards",
       [
@@ -1233,14 +1468,19 @@ export function comptrollerCommands() {
         new Arg("comptroller", getComptroller, { implicit: true }),
         new Arg("rate", getNumberV),
       ],
-      (world, from, { comptroller, rate }) =>
-        setCompRate(world, from, comptroller, rate)
+      (world, from, { comptroller, rate }) => {
+        if (canSetCompRate(comptroller)) {
+          return setCompRate(world, from, comptroller, rate);
+        }
+        console.log("The selected Comptroller does not implement SetCompRate");
+        return Promise.resolve(world);
+      }
     ),
     new Command<{ comptroller: Comptroller; cToken: CToken; speed: NumberV }>(
       `
       #### SetCompSpeed
       * "Comptroller SetCompSpeed <cToken> <rate>" - Sets COMP speed for market
-      * E.g. "Comptroller SetCompSpeed cToken 1000
+        * E.g. "Comptroller SetCompSpeed cToken 1000
       `,
       "SetCompSpeed",
       [
@@ -1259,7 +1499,7 @@ export function comptrollerCommands() {
       `
       #### SetContributorCompSpeed
       * "Comptroller SetContributorCompSpeed <contributor> <rate>" - Sets COMP speed for contributor
-      * E.g. "Comptroller SetContributorCompSpeed contributor 1000
+        * E.g. "Comptroller SetContributorCompSpeed contributor 1000
       `,
       "SetContributorCompSpeed",
       [
@@ -1298,10 +1538,10 @@ export function comptrollerCommands() {
     ),
     new Command<{ comptroller: Comptroller; newBorrowCapGuardian: AddressV }>(
       `
-        #### SetBorrowCapGuardian
+      #### SetBorrowCapGuardian
 
-        * "Comptroller SetBorrowCapGuardian newBorrowCapGuardian:<Address>" - Sets the Borrow Cap Guardian for the Comptroller
-          * E.g. "Comptroller SetBorrowCapGuardian Geoff"
+      * "Comptroller SetBorrowCapGuardian newBorrowCapGuardian:<Address>" - Sets the Borrow Cap Guardian for the Comptroller
+        * E.g. "Comptroller SetBorrowCapGuardian Geoff"
       `,
       "SetBorrowCapGuardian",
       [

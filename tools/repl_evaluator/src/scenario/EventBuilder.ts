@@ -1,6 +1,5 @@
 import { Event } from "./Event";
 import { addAction, World } from "./World";
-import { Governor } from "./Contract/Governor";
 import { Invokation } from "./Invokation";
 import {
   Arg,
@@ -23,7 +22,11 @@ import {
   getNumberV,
   getStringV,
 } from "./CoreValue";
+
 import { AbiItem, AbiInput } from "web3-utils";
+import { GovernorAlpha, GovernorBravoDelegate } from "../../../../typechain";
+
+type Governor = GovernorBravoDelegate | GovernorAlpha;
 
 export interface ContractData<T> {
   invokation: Invokation<T>;
@@ -226,7 +229,7 @@ export function buildContractEvent<T extends Contract>(
         from: string,
         fn: string,
         inputs: object,
-        output: AbiItem
+        _output: AbiItem
       ): Promise<World> {
         const sendable = <Sendable<any>>(
           inputs["contract"].methods[fn](...Object.values(inputs).slice(1))
@@ -338,7 +341,7 @@ export async function buildContractFetcher<T extends Contract>(
 
   function fetchers() {
     async function buildOutput(
-      world: World,
+      _world: World,
       fn: string,
       inputs: object,
       output: AbiItem
@@ -406,7 +409,7 @@ export async function buildContractFetcher<T extends Contract>(
     `,
     contractName,
     [new Arg("res", getValue, { variadic: true })],
-    async (world, { res }) => res,
+    async (_world, { res }) => res,
     { subExpressions: fetchers() }
   );
 

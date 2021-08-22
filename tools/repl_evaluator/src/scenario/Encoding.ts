@@ -1,8 +1,9 @@
-import BigNumber from 'bignumber.js';
+import ethers from "ethers";
+import "@nomiclabs/hardhat-ethers";
+import BigNumber from "bignumber.js";
+const smallEnoughNumber = new BigNumber("100000000");
 
-const smallEnoughNumber = new BigNumber('100000000');
-
-export type encodedNumber = number | BigNumber;
+export type encodedNumber = number | ethers.BigNumber;
 
 // Returns the mantissa of an Exp with given floating value
 export function getExpMantissa(float: number): encodedNumber {
@@ -12,7 +13,15 @@ export function getExpMantissa(float: number): encodedNumber {
   return toEncodableNum(str);
 }
 
-export function toEncodableNum(amountArgRaw: string | encodedNumber): encodedNumber {
-  const bigNumber = new BigNumber(amountArgRaw);
-  return bigNumber.lt(smallEnoughNumber) ? bigNumber.toNumber() : bigNumber;
+export function toEncodableNum(
+  amountArgRaw: string | encodedNumber
+): encodedNumber {
+  console.log(amountArgRaw);
+  const bigNumber = new BigNumber(
+    ethers.BigNumber.from(amountArgRaw).toString()
+  );
+  const output = bigNumber.lt(smallEnoughNumber)
+    ? bigNumber.toNumber()
+    : bigNumber;
+  return ethers.BigNumber.from(output.toString());
 }

@@ -1,32 +1,38 @@
 import { Event } from "../Event";
 import { World } from "../World";
-import { Erc20 } from "../Contract/Erc20";
+import { IERC20 as Erc20 } from "../../../../../typechain/IERC20";
 import { getErc20Address, getWorldContractByAddress } from "../ContractLookup";
 import { getAddressV, getCoreValue, mapValue } from "../CoreValue";
 import { Arg, Fetcher, getFetcherValue } from "../Command";
 import { AddressV, NumberV, Value, StringV } from "../Value";
 
-export async function getErc20Name(_: World, erc20: Erc20): Promise<StringV> {
+export async function getErc20Name(
+  _world: World,
+  erc20: Erc20
+): Promise<StringV> {
   return new StringV((await erc20.name()).toString());
 }
 
-export async function getErc20Symbol(_: World, erc20: Erc20): Promise<StringV> {
+export async function getErc20Symbol(
+  _world: World,
+  erc20: Erc20
+): Promise<StringV> {
   return new StringV((await erc20.symbol()).toString());
 }
 
 export async function getErc20Decimals(
-  _: World,
+  _world: World,
   erc20: Erc20
 ): Promise<NumberV> {
   return new NumberV((await erc20.decimals()).toString());
 }
 
-async function getTotalSupply(_: World, erc20: Erc20): Promise<NumberV> {
+async function getTotalSupply(_world: World, erc20: Erc20): Promise<NumberV> {
   return new NumberV((await erc20.totalSupply()).toString());
 }
 
 async function getTokenBalance(
-  _: World,
+  _world: World,
   erc20: Erc20,
   address: string
 ): Promise<NumberV> {
@@ -34,7 +40,7 @@ async function getTokenBalance(
 }
 
 async function getAllowance(
-  _: World,
+  _world: World,
   erc20: Erc20,
   owner: string,
   spender: string
@@ -65,7 +71,7 @@ export function erc20Fetchers() {
       `,
       "Address",
       [new Arg("erc20", getErc20V)],
-      async (world, { erc20 }) => new AddressV(erc20._address),
+      async (_world, { erc20 }) => new AddressV(erc20.address),
       { namePos: 1 }
     ),
     new Fetcher<{ erc20: Erc20 }, StringV>(

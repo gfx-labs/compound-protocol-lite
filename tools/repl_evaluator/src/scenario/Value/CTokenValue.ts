@@ -1,12 +1,12 @@
 import { Event } from "../Event";
 import { World } from "../World";
-import { CToken } from "../Contract/CToken";
-import { CErc20Delegator } from "../Contract/CErc20Delegator";
-import { Erc20 } from "../Contract/Erc20";
+import { CToken } from "../../../../../typechain/CToken";
+import { CErc20Delegator } from "../../../../../typechain/CErc20Delegator";
 import { getAddressV, getCoreValue, getStringV, mapValue } from "../CoreValue";
 import { Arg, Fetcher, getFetcherValue } from "../Command";
 import { AddressV, NumberV, Value, StringV } from "../Value";
 import { getWorldContractByAddress, getCTokenAddress } from "../ContractLookup";
+import { CErc20Delegator__factory } from "../../../../../typechain";
 
 export async function getCTokenV(world: World, event: Event): Promise<CToken> {
   const address = await mapValue<AddressV>(
@@ -36,112 +36,123 @@ export async function getCErc20DelegatorV(
 }
 
 async function getInterestRateModel(
-  world: World,
+  _: World,
   cToken: CToken
 ): Promise<AddressV> {
-  return new AddressV(await cToken.methods.interestRateModel().call());
+  return new AddressV(await cToken.callStatic.interestRateModel());
 }
 
-async function cTokenAddress(world: World, cToken: CToken): Promise<AddressV> {
-  return new AddressV(cToken._address);
+async function cTokenAddress(_world: World, cToken: CToken): Promise<AddressV> {
+  return new AddressV(cToken.address);
 }
 
-async function getCTokenAdmin(world: World, cToken: CToken): Promise<AddressV> {
-  return new AddressV(await cToken.methods.admin().call());
+async function getCTokenAdmin(
+  _world: World,
+  cToken: CToken
+): Promise<AddressV> {
+  return new AddressV(await cToken.callStatic.admin());
 }
 
 async function getCTokenPendingAdmin(
-  world: World,
+  _world: World,
   cToken: CToken
 ): Promise<AddressV> {
-  return new AddressV(await cToken.methods.pendingAdmin().call());
+  return new AddressV(await cToken.callStatic.pendingAdmin());
 }
 
 async function balanceOfUnderlying(
-  world: World,
+  _world: World,
   cToken: CToken,
   user: string
 ): Promise<NumberV> {
-  return new NumberV(await cToken.methods.balanceOfUnderlying(user).call());
+  return new NumberV(await cToken.callStatic.balanceOfUnderlying(user));
 }
 
 async function getBorrowBalance(
-  world: World,
+  _world: World,
   cToken: CToken,
-  user
+  user: string
 ): Promise<NumberV> {
-  return new NumberV(await cToken.methods.borrowBalanceCurrent(user).call());
+  return new NumberV(await cToken.callStatic.borrowBalanceCurrent(user));
 }
 
 async function getBorrowBalanceStored(
-  world: World,
+  _world: World,
   cToken: CToken,
-  user
+  user: string
 ): Promise<NumberV> {
-  return new NumberV(await cToken.methods.borrowBalanceStored(user).call());
+  return new NumberV(await cToken.callStatic.borrowBalanceStored(user));
 }
 
-async function getTotalBorrows(world: World, cToken: CToken): Promise<NumberV> {
-  return new NumberV(await cToken.methods.totalBorrows().call());
+async function getTotalBorrows(
+  _world: World,
+  cToken: CToken
+): Promise<NumberV> {
+  return new NumberV(await cToken.callStatic.totalBorrows());
 }
 
 async function getTotalBorrowsCurrent(
-  world: World,
+  _world: World,
   cToken: CToken
 ): Promise<NumberV> {
-  return new NumberV(await cToken.methods.totalBorrowsCurrent().call());
+  return new NumberV(await cToken.callStatic.totalBorrowsCurrent());
 }
 
 async function getReserveFactor(
-  world: World,
+  _world: World,
   cToken: CToken
 ): Promise<NumberV> {
-  return new NumberV(
-    await cToken.methods.reserveFactorMantissa().call(),
-    1.0e18
-  );
+  return new NumberV(await cToken.callStatic.reserveFactorMantissa(), 1.0e18);
 }
 
 async function getTotalReserves(
-  world: World,
+  _world: World,
   cToken: CToken
 ): Promise<NumberV> {
-  return new NumberV(await cToken.methods.totalReserves().call());
+  return new NumberV(await cToken.callStatic.totalReserves());
 }
 
-async function getComptroller(world: World, cToken: CToken): Promise<AddressV> {
-  return new AddressV(await cToken.methods.comptroller().call());
+async function getComptroller(
+  _world: World,
+  cToken: CToken
+): Promise<AddressV> {
+  return new AddressV(await cToken.callStatic.comptroller());
 }
 
 async function getExchangeRateStored(
-  world: World,
+  _world: World,
   cToken: CToken
 ): Promise<NumberV> {
-  return new NumberV(await cToken.methods.exchangeRateStored().call());
+  return new NumberV(await cToken.callStatic.exchangeRateStored());
 }
 
-async function getExchangeRate(world: World, cToken: CToken): Promise<NumberV> {
-  return new NumberV(await cToken.methods.exchangeRateCurrent().call(), 1e18);
+async function getExchangeRate(
+  _world: World,
+  cToken: CToken
+): Promise<NumberV> {
+  return new NumberV(await cToken.callStatic.exchangeRateCurrent(), 1e18);
 }
 
-async function getCash(world: World, cToken: CToken): Promise<NumberV> {
-  return new NumberV(await cToken.methods.getCash().call());
+async function getCash(_world: World, cToken: CToken): Promise<NumberV> {
+  return new NumberV(await cToken.callStatic.getCash());
 }
 
-async function getInterestRate(world: World, cToken: CToken): Promise<NumberV> {
+async function getInterestRate(
+  _world: World,
+  cToken: CToken
+): Promise<NumberV> {
   return new NumberV(
-    await cToken.methods.borrowRatePerBlock().call(),
+    await cToken.callStatic.borrowRatePerBlock(),
     1.0e18 / 2102400
   );
 }
 
 async function getImplementation(
-  world: World,
+  _world: World,
   cToken: CToken
 ): Promise<AddressV> {
-  return new AddressV(
-    await (cToken as CErc20Delegator).methods.implementation().call()
-  );
+  const delegator = new CErc20Delegator__factory().attach(cToken.address);
+  return new AddressV(await delegator.callStatic.implementation());
 }
 
 export function cTokenFetchers() {
@@ -207,8 +218,8 @@ export function cTokenFetchers() {
       `,
       "Underlying",
       [new Arg("cToken", getCTokenV)],
-      async (world, { cToken }) =>
-        new AddressV(await cToken.methods.underlying().call()),
+      async (_world, { cToken }) =>
+        new AddressV(await cToken.callStatic["underlying()"]()),
       { namePos: 1 }
     ),
 
@@ -384,7 +395,7 @@ export function cTokenFetchers() {
       [new Arg("cToken", getCTokenV), new Arg("signature", getStringV)],
       async (world, { cToken, signature }) => {
         const res = await world.hre.ethers.provider.call({
-          to: cToken._address,
+          to: cToken.address,
           data: new world.hre.ethers.utils.Interface([
             signature.val,
           ]).encodeFunctionData(signature.val),

@@ -1,17 +1,18 @@
 import { Event } from "../Event";
 import { World } from "../World";
-import { GovernorBravo } from "../Contract/GovernorBravo";
 import { Invokation } from "../Invokation";
 import { getAddressV, getNumberV, getStringV } from "../CoreValue";
 import { AddressV, NumberV, StringV } from "../Value";
 import { Arg, Fetcher, getFetcherValue } from "../Command";
 import { storeAndSaveContract } from "../Networks";
-import { getContract } from "../Contract";
-
-const GovernorBravoDelegate = getContract("GovernorBravoDelegate");
-const GovernorBravoDelegateHarness = getContract("GovernorBravoDelegateHarness");
-const GovernorBravoDelegator = getContract("GovernorBravoDelegator");
-const GovernorBravoImmutable = getContract("GovernorBravoImmutable");
+import { deploy_contract_world, getContract } from "../Contract";
+import { GovernorBravo } from "../ContractLookup";
+import {
+  GovernorBravoDelegate,
+  GovernorBravoDelegateHarness,
+  GovernorBravoDelegator,
+} from "../../../../../typechain";
+import { ethers } from "ethers";
 
 export interface GovernorBravoData {
   invokation: Invokation<GovernorBravo>;
@@ -24,10 +25,23 @@ export async function buildGovernor(
   world: World,
   from: string,
   params: Event
-): Promise<{ world: World; governor: GovernorBravo; govData: GovernorBravoData }> {
+): Promise<{
+  world: World;
+  governor: GovernorBravo;
+  govData: GovernorBravoData;
+}> {
   const fetchers = [
     new Fetcher<
-      { name: StringV, timelock: AddressV, comp: AddressV, admin: AddressV, implementation: AddressV, votingPeriod: NumberV, votingDelay: NumberV, proposalThreshold: NumberV},
+      {
+        name: StringV;
+        timelock: AddressV;
+        comp: AddressV;
+        admin: AddressV;
+        implementation: AddressV;
+        votingPeriod: NumberV;
+        votingDelay: NumberV;
+        proposalThreshold: NumberV;
+      },
       GovernorBravoData
     >(
       `
@@ -45,22 +59,51 @@ export async function buildGovernor(
         new Arg("implementation", getAddressV),
         new Arg("votingPeriod", getNumberV),
         new Arg("votingDelay", getNumberV),
-        new Arg("proposalThreshold", getNumberV)
+        new Arg("proposalThreshold", getNumberV),
       ],
-      async (world, { name, timelock, comp, admin, implementation, votingPeriod, votingDelay, proposalThreshold }) => {
+      async (
+        world,
+        {
+          name,
+          timelock,
+          comp,
+          admin,
+          implementation,
+          votingPeriod,
+          votingDelay,
+          proposalThreshold,
+        }
+      ) => {
         return {
-          invokation: await GovernorBravoDelegator.deploy<GovernorBravo>(
+          invokation: await deploy_contract_world<GovernorBravoDelegator>(
             world,
             from,
-            [timelock.val, comp.val, admin.val, implementation.val, votingPeriod.encode(), votingDelay.encode(), proposalThreshold.encode()]
+            "GovernorBravoDelegator",
+            [
+              timelock.val,
+              comp.val,
+              admin.val,
+              implementation.val,
+              votingPeriod.encode(),
+              votingDelay.encode(),
+              proposalThreshold.encode(),
+            ]
           ),
           name: name.val,
-          contract: "GovernorBravoDelegator"
+          contract: "GovernorBravoDelegator",
         };
       }
     ),
     new Fetcher<
-      { name: StringV, timelock: AddressV, comp: AddressV, admin: AddressV, votingPeriod: NumberV, votingDelay: NumberV, proposalThreshold: NumberV },
+      {
+        name: StringV;
+        timelock: AddressV;
+        comp: AddressV;
+        admin: AddressV;
+        votingPeriod: NumberV;
+        votingDelay: NumberV;
+        proposalThreshold: NumberV;
+      },
       GovernorBravoData
     >(
       `
@@ -77,24 +120,40 @@ export async function buildGovernor(
         new Arg("admin", getAddressV),
         new Arg("votingPeriod", getNumberV),
         new Arg("votingDelay", getNumberV),
-        new Arg("proposalThreshold", getNumberV)
+        new Arg("proposalThreshold", getNumberV),
       ],
-      async (world, { name, timelock, comp, admin, votingPeriod, votingDelay, proposalThreshold }) => {
+      async (
+        world,
+        {
+          name,
+          timelock,
+          comp,
+          admin,
+          votingPeriod,
+          votingDelay,
+          proposalThreshold,
+        }
+      ) => {
         return {
-          invokation: await GovernorBravoImmutable.deploy<GovernorBravo>(
+          invokation: await deploy_contract_world<GovernorBravo>(
             world,
             from,
-            [timelock.val, comp.val, admin.val, votingPeriod.encode(), votingDelay.encode(), proposalThreshold.encode()]
+            "GovernorBravo",
+            [
+              timelock.val,
+              comp.val,
+              admin.val,
+              votingPeriod.encode(),
+              votingDelay.encode(),
+              proposalThreshold.encode(),
+            ]
           ),
           name: name.val,
-          contract: "GovernorBravoImmutable"
+          contract: "GovernorBravoImmutable",
         };
       }
     ),
-    new Fetcher<
-      { name: StringV },
-      GovernorBravoData
-    >(
+    new Fetcher<{ name: StringV }, GovernorBravoData>(
       `
       #### GovernorBravoDelegate
 
@@ -102,25 +161,21 @@ export async function buildGovernor(
         * E.g. "Governor Deploy BravoDelegate GovernorBravoDelegate"
     `,
       "BravoDelegate",
-      [
-        new Arg("name", getStringV)
-      ],
+      [new Arg("name", getStringV)],
       async (world, { name }) => {
         return {
-          invokation: await GovernorBravoDelegate.deploy<GovernorBravo>(
+          invokation: await deploy_contract_world<GovernorBravoDelegate>(
             world,
             from,
+            "GovernorBravoDelegate",
             []
           ),
           name: name.val,
-          contract: "GovernorBravoDelegate"
+          contract: "GovernorBravoDelegate",
         };
       }
     ),
-    new Fetcher<
-      { name: StringV },
-      GovernorBravoData
-    >(
+    new Fetcher<{ name: StringV }, GovernorBravoData>(
       `
       #### GovernorBravoDelegateHarness
 
@@ -128,21 +183,20 @@ export async function buildGovernor(
         * E.g. "Governor Deploy BravoDelegateHarness GovernorBravoDelegateHarness"
     `,
       "BravoDelegateHarness",
-      [
-        new Arg("name", getStringV)
-      ],
+      [new Arg("name", getStringV)],
       async (world, { name }) => {
         return {
-          invokation: await GovernorBravoDelegateHarness.deploy<GovernorBravo>(
+          invokation: await deploy_contract_world<GovernorBravoDelegate>(
             world,
             from,
+            "GovernorBravoDelegateHarness",
             []
           ),
           name: name.val,
-          contract: "GovernorBravoDelegateHarness"
+          contract: "GovernorBravoDelegateHarness",
         };
       }
-    )
+    ),
   ];
 
   let govData = await getFetcherValue<any, GovernorBravoData>(
@@ -159,16 +213,14 @@ export async function buildGovernor(
   }
 
   const governor = invokation.value!;
-  govData.address = governor._address;
+  govData.address = governor.address;
 
   world = await storeAndSaveContract(
     world,
     governor,
     govData.name,
     invokation,
-    [
-      { index: ["Governor", govData.name], data: govData },
-    ]
+    [{ index: ["Governor", govData.name], data: govData }]
   );
 
   return { world, governor, govData };

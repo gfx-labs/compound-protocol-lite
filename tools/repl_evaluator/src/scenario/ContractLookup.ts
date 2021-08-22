@@ -5,18 +5,24 @@ import { World } from "./World";
 import { Contract } from "./Contract";
 import { mustString } from "./Utils";
 
-import { CErc20Delegate } from "./Contract/CErc20Delegate";
-import { Comp } from "./Contract/Comp";
-import { Comptroller } from "./Contract/Comptroller";
-import { ComptrollerImpl } from "./Contract/ComptrollerImpl";
-import { CToken } from "./Contract/CToken";
-import { Governor } from "./Contract/Governor";
-import { GovernorBravo } from "./Contract/GovernorBravo";
-import { Erc20 } from "./Contract/Erc20";
-import { InterestRateModel } from "./Contract/InterestRateModel";
-import { PriceOracle } from "./Contract/PriceOracle";
-import { Timelock } from "./Contract/Timelock";
-import { AnchoredView } from "./Contract/AnchoredView";
+import {
+  CErc20Delegate,
+  Comp,
+  CToken,
+  ERC20 as Erc20,
+  InterestRateModel,
+  PriceOracle,
+  Timelock,
+  Maximillion,
+  Unitroller,
+  IUniswapAnchoredView as AnchoredView,
+  GovernorBravoDelegate,
+  GovernorBravoDelegator,
+  GovernorAlpha,
+} from "../../../../typechain";
+import { ComptrollerImplS } from "./Event/ComptrollerEvent";
+
+export type GovernorBravo = GovernorBravoDelegate | GovernorBravoDelegator;
 
 type ContractDataEl = string | Map<string, object> | undefined;
 
@@ -82,22 +88,22 @@ export async function getTimelock(world: World): Promise<Timelock> {
   return getWorldContract(world, [["Contracts", "Timelock"]]);
 }
 
-export async function getUnitroller(world: World): Promise<Comptroller> {
+export async function getUnitroller(world: World): Promise<Unitroller> {
   return getWorldContract(world, [["Contracts", "Unitroller"]]);
 }
 
-export async function getMaximillion(world: World): Promise<Comptroller> {
+export async function getMaximillion(world: World): Promise<Maximillion> {
   return getWorldContract(world, [["Contracts", "Maximillion"]]);
 }
 
-export async function getComptroller(world: World): Promise<Comptroller> {
+export async function getComptroller(world: World): Promise<ComptrollerImplS> {
   return getWorldContract(world, [["Contracts", "Comptroller"]]);
 }
 
 export async function getComptrollerImpl(
   world: World,
   comptrollerImplArg: Event
-): Promise<ComptrollerImpl> {
+): Promise<ComptrollerImplS> {
   return getWorldContract(world, [
     ["Comptroller", mustString(comptrollerImplArg), "address"],
   ]);
@@ -160,8 +166,8 @@ export async function getCompData(
 export async function getGovernorData(
   world: World,
   governorArg: string
-): Promise<[Governor, string, Map<string, string>]> {
-  let contract = getWorldContract<Governor>(world, [
+): Promise<[GovernorAlpha, string, Map<string, string>]> {
+  let contract = getWorldContract<GovernorAlpha>(world, [
     ["Governor", governorArg, "address"],
   ]);
   let data = getContractData(world, [["Governor", governorArg]]);
@@ -232,7 +238,7 @@ export async function getCTokenDelegateData(
 export async function getComptrollerImplData(
   world: World,
   comptrollerImplArg: string
-): Promise<[ComptrollerImpl, string, Map<string, string>]> {
+): Promise<[ComptrollerImplS, string, Map<string, string>]> {
   let contract = await getComptrollerImpl(
     world,
     <Event>(<any>comptrollerImplArg)

@@ -1,6 +1,6 @@
 import { Event } from "../Event";
 import { World } from "../World";
-import { Timelock } from "../Contract/Timelock";
+import { Timelock } from "../../../../../typechain/Timelock";
 import {
   getAddressV,
   getCoreValue,
@@ -13,33 +13,33 @@ import { getTimelock } from "../ContractLookup";
 import { encodeParameters } from "../Utils";
 
 export async function getTimelockAddress(
-  world: World,
+  _world: World,
   timelock: Timelock
 ): Promise<AddressV> {
-  return new AddressV(timelock._address);
+  return new AddressV(timelock.address);
 }
 
-async function getAdmin(world: World, timelock: Timelock): Promise<AddressV> {
-  return new AddressV(await timelock.methods.admin().call());
+async function getAdmin(_world: World, timelock: Timelock): Promise<AddressV> {
+  return new AddressV(await timelock.callStatic.admin());
 }
 
 async function getPendingAdmin(
-  world: World,
+  _world: World,
   timelock: Timelock
 ): Promise<AddressV> {
-  return new AddressV(await timelock.methods.pendingAdmin().call());
+  return new AddressV(await timelock.callStatic.pendingAdmin());
 }
 
-async function getDelay(world: World, timelock: Timelock): Promise<NumberV> {
-  return new NumberV(await timelock.methods.delay().call());
+async function getDelay(_world: World, timelock: Timelock): Promise<NumberV> {
+  return new NumberV(await timelock.callStatic.delay());
 }
 
 async function queuedTransaction(
-  world: World,
+  _world: World,
   timelock: Timelock,
   txHash: string
 ): Promise<BoolV> {
-  return new BoolV(await timelock.methods.queuedTransactions(txHash).call());
+  return new BoolV(await timelock.callStatic.queuedTransactions(txHash));
 }
 
 export function timelockFetchers() {
@@ -114,10 +114,11 @@ export function timelockFetchers() {
           signature.val,
           data.map((a) => a.val)
         );
-        const encodedTransaction = world.hre.ethers.utils.defaultAbiCoder.encode(
-          ["address", "uint256", "string", "bytes", "uint256"],
-          [target.val, value.val, signature.val, encodedData, eta.val]
-        );
+        const encodedTransaction =
+          world.hre.ethers.utils.defaultAbiCoder.encode(
+            ["address", "uint256", "string", "bytes", "uint256"],
+            [target.val, value.val, signature.val, encodedData, eta.val]
+          );
 
         return Promise.resolve(
           new StringV(world.hre.ethers.utils.keccak256(encodedTransaction))

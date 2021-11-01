@@ -32,3 +32,12 @@ very incomplete
 
 make sure that your node version is high enough for hardhat
 im using 16.7.0
+
+
+## Running Forking Simulation Script
+
+Modify the `main` function in `scripts/fork-simulate.ts` to simulate as needed. Make sure to set the block parameter in the `initializeForkWithSigners` function if necessary.
+
+```
+$ npx hardhat run scripts/fork-simulate.ts
+```
